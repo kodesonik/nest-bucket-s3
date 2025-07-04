@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json.schemastore.org/nest-cli",
+  "collection": "@nestjs/schematics",
+  "sourceRoot": "src",
+  "compilerOptions": {
+    "deleteOutDir": true,
+    "assets": [
+      "**/*.hbs",
+      "**/*.ejs",
+      "**/*.html",
+      "**/*.css",
+      "**/*.js",
+      "health-check.js"
+    ],
+    "watchAssets": true
+  },
+  "generateOptions": {
+    "spec": {
+      "component": false,
+      "module": false
+    }
+  }
+}
