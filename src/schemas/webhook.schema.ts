@@ -4,6 +4,13 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export type WebhookDocument = Webhook & Document;
 
+export type WebhookStatus = 'active' | 'paused' | 'disabled' | 'failed';
+export type WebhookMethod = 'POST' | 'PUT' | 'PATCH';
+export type WebhookContentType = 'application/json' | 'application/x-www-form-urlencoded';
+export type WebhookBackoffStrategy = 'linear' | 'exponential' | 'fixed';
+export type WebhookEnvironment = 'development' | 'staging' | 'production';
+export type WebhookAuthType = 'basic' | 'bearer' | 'custom';
+
 @Schema({ timestamps: true })
 export class Webhook {
   @ApiProperty({ description: 'Webhook name' })
@@ -55,7 +62,7 @@ export class Webhook {
     enum: ['active', 'paused', 'disabled', 'failed'], 
     default: 'active' 
   })
-  status: string;
+  status: WebhookStatus;
 
   @ApiProperty({ description: 'Request timeout in milliseconds' })
   @Prop({ type: Number, default: 10000, min: 1000, max: 30000 })
@@ -71,7 +78,7 @@ export class Webhook {
     enum: ['POST', 'PUT', 'PATCH'], 
     default: 'POST' 
   })
-  method: string;
+  method: WebhookMethod;
 
   @ApiProperty({ description: 'Content type for requests' })
   @Prop({ 
@@ -79,7 +86,7 @@ export class Webhook {
     enum: ['application/json', 'application/x-www-form-urlencoded'], 
     default: 'application/json' 
   })
-  contentType: string;
+  contentType: WebhookContentType;
 
   @ApiProperty({ description: 'Retry configuration' })
   @Prop({
@@ -96,7 +103,7 @@ export class Webhook {
   retryConfig: {
     enabled: boolean;
     maxAttempts: number;
-    backoffStrategy: string;
+    backoffStrategy: WebhookBackoffStrategy;
     initialDelay: number;
     maxDelay: number;
   };
@@ -175,7 +182,7 @@ export class Webhook {
     allowedIPs: string[];
     blockedIPs: string[];
     requireAuth: boolean;
-    authType?: string;
+    authType?: WebhookAuthType;
     authValue?: string;
   };
 
@@ -193,7 +200,7 @@ export class Webhook {
     enum: ['development', 'staging', 'production'], 
     default: 'production' 
   })
-  environment: string;
+  environment: WebhookEnvironment;
 
   @ApiProperty({ description: 'Webhook version for API compatibility' })
   @Prop({ type: String, default: '1.0' })

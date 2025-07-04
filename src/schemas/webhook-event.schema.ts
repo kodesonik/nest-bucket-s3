@@ -1,7 +1,10 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
+import { WebhookPayload } from '../modules/webhooks/webhook.service';
 
 export type WebhookEventDocument = WebhookEvent & Document;
+
+export type WebhookEventStatus = 'pending' | 'delivered' | 'failed' | 'cancelled';
 
 @Schema({ timestamps: true })
 export class WebhookEvent {
@@ -15,7 +18,7 @@ export class WebhookEvent {
   eventType: string;
 
   @Prop({ type: Object, required: true })
-  payload: Record<string, any>;
+  payload: WebhookPayload;
 
   @Prop({ 
     required: true, 
@@ -23,7 +26,7 @@ export class WebhookEvent {
     default: 'pending',
     index: true 
   })
-  status: string;
+  status: WebhookEventStatus;
 
   @Prop({ default: 0 })
   attempts: number;
@@ -49,7 +52,7 @@ export class WebhookEvent {
   @Prop()
   responseBody: string;
 
-  @Prop()
+  @Prop({ type: Object })
   responseHeaders: Record<string, string>;
 
   @Prop()
@@ -73,12 +76,11 @@ export class WebhookEvent {
 
 export const WebhookEventSchema = SchemaFactory.createForClass(WebhookEvent);
 
-// Indexes for performance
-WebhookEventSchema.index({ webhookId: 1, createdAt: -1 });
-WebhookEventSchema.index({ status: 1, nextRetryAt: 1 });
+// Create indexes
+WebhookEventSchema.index({ webhookId: 1, 'payload.id': 1 });
 WebhookEventSchema.index({ appId: 1, eventType: 1 });
+WebhookEventSchema.index({ status: 1, nextRetryAt: 1 });
 WebhookEventSchema.index({ scheduledFor: 1 });
-WebhookEventSchema.index({ createdAt: -1 });
 
 // TTL index to automatically delete old events after 30 days
 WebhookEventSchema.index({ createdAt: 1 }, { expireAfterSeconds: 30 * 24 * 60 * 60 }); 

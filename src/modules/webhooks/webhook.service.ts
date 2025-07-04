@@ -1,13 +1,13 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { HttpService } from '@nestjs/axios';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import * as crypto from 'crypto';
 import { firstValueFrom } from 'rxjs';
-import { Webhook, WebhookDocument } from '../../schemas/webhook.schema';
-import { WebhookEvent, WebhookEventDocument } from '../../schemas/webhook-event.schema';
+import { Webhook, WebhookDocument, WebhookStatus } from '../../schemas/webhook.schema';
+import { WebhookEvent, WebhookEventDocument, WebhookEventStatus } from '../../schemas/webhook-event.schema';
 import { CreateWebhookDto } from './dto/create-webhook.dto';
 import { UpdateWebhookDto } from './dto/update-webhook.dto';
 
@@ -15,9 +15,17 @@ export interface WebhookPayload {
   id: string;
   event: string;
   timestamp: Date;
-  data: any;
+  data: Record<string, any>;
   appId: string;
   version: string;
+}
+
+export interface WebhookEventPayload extends WebhookPayload {
+  webhookId: Types.ObjectId;
+  status: WebhookEventStatus;
+  attempts: number;
+  maxAttempts: number;
+  scheduledFor: Date;
 }
 
 @Injectable()
@@ -36,9 +44,9 @@ export class WebhookService {
   async createWebhook(appId: string, createDto: CreateWebhookDto): Promise<WebhookDocument> {
     const webhook = new this.webhookModel({
       ...createDto,
-      appId,
+      appId: new Types.ObjectId(appId),
       secret: this.generateSecret(),
-      status: 'active',
+      status: 'active' as WebhookStatus,
       statistics: {
         totalSent: 0,
         totalFailed: 0,
@@ -60,13 +68,21 @@ export class WebhookService {
     updateDto: UpdateWebhookDto,
   ): Promise<WebhookDocument> {
     const webhook = await this.webhookModel.findOneAndUpdate(
-      { _id: id, appId },
-      { $set: updateDto },
+      {
+        _id: new Types.ObjectId(id),
+        appId: new Types.ObjectId(appId),
+      },
+      {
+        $set: {
+          ...updateDto,
+          updatedAt: new Date(),
+        },
+      },
       { new: true },
     ).exec();
 
     if (!webhook) {
-      throw new Error('Webhook not found');
+      throw new NotFoundException('Webhook not found');
     }
 
     this.logger.log(`Webhook updated: ${id}`);
@@ -74,24 +90,30 @@ export class WebhookService {
   }
 
   async deleteWebhook(id: string, appId: string): Promise<void> {
-    const result = await this.webhookModel.deleteOne({ _id: id, appId }).exec();
+    const result = await this.webhookModel.deleteOne({
+      _id: new Types.ObjectId(id),
+      appId: new Types.ObjectId(appId),
+    }).exec();
     
     if (result.deletedCount === 0) {
-      throw new Error('Webhook not found');
+      throw new NotFoundException('Webhook not found');
     }
 
     this.logger.log(`Webhook deleted: ${id}`);
   }
 
   async getWebhooks(appId: string): Promise<WebhookDocument[]> {
-    return this.webhookModel.find({ appId }).exec();
+    return this.webhookModel.find({ appId: new Types.ObjectId(appId) }).exec();
   }
 
   async getWebhook(id: string, appId: string): Promise<WebhookDocument> {
-    const webhook = await this.webhookModel.findOne({ _id: id, appId }).exec();
+    const webhook = await this.webhookModel.findOne({
+      _id: new Types.ObjectId(id),
+      appId: new Types.ObjectId(appId),
+    }).exec();
     
     if (!webhook) {
-      throw new Error('Webhook not found');
+      throw new NotFoundException('Webhook not found');
     }
 
     return webhook;
@@ -100,38 +122,38 @@ export class WebhookService {
   async triggerEvent(
     appId: string,
     eventType: string,
-    data: any,
+    data: Record<string, any>,
     resourceId?: string,
   ): Promise<void> {
     const webhooks = await this.webhookModel.find({
-      appId,
-      status: 'active',
+      appId: new Types.ObjectId(appId),
+      status: 'active' as WebhookStatus,
       events: eventType,
-    }).exec();
+    }).select('_id retryConfig').lean().exec();
 
     if (webhooks.length === 0) {
       this.logger.debug(`No active webhooks found for event ${eventType} in app ${appId}`);
       return;
     }
 
-    const payload: WebhookPayload = {
+    const basePayload: WebhookPayload = {
       id: crypto.randomUUID(),
       event: eventType,
       timestamp: new Date(),
       data,
-      appId,
+      appId: appId.toString(),
       version: '1.0',
     };
 
     // Create webhook events for each webhook
     const webhookEvents = webhooks.map(webhook => ({
       webhookId: webhook._id,
-      appId,
+      appId: new Types.ObjectId(appId),
       eventType,
-      payload,
-      resourceId,
-      status: 'pending',
-      attemptCount: 0,
+      payload: basePayload,
+      status: 'pending' as WebhookEventStatus,
+      attempts: 0,
+      maxAttempts: webhook.retryConfig?.maxAttempts || 5,
       scheduledFor: new Date(),
     }));
 
@@ -139,9 +161,12 @@ export class WebhookService {
 
     // Process webhooks immediately
     for (const webhook of webhooks) {
-      this.processWebhookEvent(webhook, payload).catch(error => {
-        this.logger.error(`Failed to process webhook ${webhook._id}: ${(error as Error).message}`);
-      });
+      const fullWebhook = await this.webhookModel.findById(webhook._id).exec();
+      if (fullWebhook) {
+        await this.processWebhookEvent(fullWebhook, basePayload).catch(error => {
+          this.logger.error(`Failed to process webhook ${fullWebhook._id}: ${(error as Error).message}`);
+        });
+      }
     }
   }
 
@@ -165,11 +190,11 @@ export class WebhookService {
         }),
       );
 
-      await this.handleSuccessfulDelivery(webhook._id, payload.id, response.status);
+      await this.handleSuccessfulDelivery(webhook, payload.id, response.status);
       this.logger.log(`Webhook delivered successfully: ${webhook.url} (${response.status})`);
 
     } catch (error) {
-      await this.handleFailedDelivery(webhook._id, payload.id, error);
+      await this.handleFailedDelivery(webhook, payload.id, error as Error);
       this.logger.error(`Webhook delivery failed: ${webhook.url} - ${(error as Error).message}`);
     }
   }
@@ -346,7 +371,7 @@ export class WebhookService {
         message: 'This is a test webhook from Digital Bucket',
         test: true,
       },
-      appId,
+      appId: appId.toString(),
       version: '1.0',
     };
 
@@ -412,12 +437,99 @@ export class WebhookService {
     await this.triggerEvent(appId, 'quota.exceeded', quotaData);
   }
 
+  async getAvailableEventTypes(): Promise<string[]> {
+    return [
+      'file.uploaded',
+      'file.deleted',
+      'file.updated',
+      'file.downloaded',
+      'folder.created',
+      'folder.deleted',
+      'folder.updated',
+      'quota.exceeded',
+      'quota.warning',
+      'user.registered',
+      'user.login',
+      'app.created',
+      'app.updated',
+      'webhook.test',
+      '*'
+    ];
+  }
+
+  async toggleWebhook(id: string, appId: string): Promise<WebhookDocument> {
+    const webhook = await this.getWebhook(id, appId);
+    const newStatus = webhook.status === 'active' ? 'paused' : 'active';
+    
+    await this.webhookModel.updateOne(
+      {
+        _id: new Types.ObjectId(id),
+        appId: new Types.ObjectId(appId),
+      },
+      { $set: { status: newStatus } }
+    ).exec();
+
+    return this.getWebhook(id, appId);
+  }
+
+  async retryWebhookEvent(eventId: string, appId: string): Promise<void> {
+    const event = await this.webhookEventModel.findOne({ _id: eventId }).exec();
+    if (!event) {
+      throw new NotFoundException('Webhook event not found');
+    }
+
+    const webhook = await this.webhookModel.findById(event.webhookId).exec();
+    if (!webhook) {
+      throw new NotFoundException('Webhook not found');
+    }
+
+    if (webhook.status !== 'active') {
+      throw new BadRequestException('Webhook is not active');
+    }
+
+    if (event.attempts >= event.maxAttempts) {
+      throw new BadRequestException('Maximum retry attempts exceeded');
+    }
+
+    // Reset event status
+    await this.webhookEventModel.updateOne(
+      { _id: eventId },
+      {
+        $set: {
+          status: 'pending',
+          scheduledFor: new Date(),
+        },
+        $inc: { attempts: 1 }
+      }
+    ).exec();
+
+    // Process the event
+    try {
+      const typedPayload: WebhookPayload = {
+        id: event.payload.id || crypto.randomUUID(),
+        event: event.eventType,
+        timestamp: event.payload.timestamp || new Date(),
+        data: event.payload.data,
+        appId: event.appId.toString(),
+        version: event.payload.version || '1.0',
+      };
+      await this.processWebhookEvent(webhook, typedPayload);
+    } catch (error) {
+      this.logger.error(`Failed to retry webhook event ${eventId}: ${(error as Error).message}`);
+      throw error;
+    }
+  }
+
+  private getRetryCount(event: WebhookEventDocument): number {
+    return event.attempts || 0;
+  }
+
   // Private helper methods
   private generateSecret(): string {
     return crypto.randomBytes(32).toString('hex');
   }
 
-  private generateSignature(payload: any, secret: string): string {
+  private generateSignature(payload: WebhookPayload, secret: string): string {
     const payloadString = JSON.stringify(payload);
     return crypto
       .createHmac('sha256', secret)
@@ -425,111 +537,90 @@ export class WebhookService {
       .digest('hex');
   }
 
-  private async handleSuccessfulDelivery(
-    webhookId: string,
-    eventId: string,
-    statusCode: number,
-  ): Promise<void> {
-    const now = new Date();
-    
-    await Promise.all([
-      // Update webhook statistics
-      this.webhookModel.updateOne(
-        { _id: webhookId },
-        {
-          $inc: {
-            'statistics.totalSent': 1,
-            'statistics.totalSuccessful': 1,
-          },
-          $set: {
-            'statistics.lastSuccessfulDelivery': now,
-          },
-        },
-      ).exec(),
-      
-      // Update event status
-      this.webhookEventModel.updateOne(
-        { _id: eventId },
-        {
-          $set: {
-            status: 'delivered',
-            deliveredAt: now,
-            statusCode,
-          },
-        },
-      ).exec(),
-    ]);
-  }
+  async handleSuccessfulDelivery(webhook: WebhookDocument, eventId: string, responseStatus: number): Promise<void> {
+    // Update webhook event
+    const webhookEvent = await this.webhookEventModel.findOne({
+      webhookId: webhook._id,
+      'payload.id': eventId,
+    }).exec();
 
-  private async handleFailedDelivery(
-    webhookId: string,
-    eventId: string,
-    error: any,
-  ): Promise<void> {
-    const now = new Date();
-    const attemptCount = await this.getEventAttemptCount(eventId);
-    const nextRetryAt = this.calculateNextRetry(attemptCount);
-
-    await Promise.all([
-      // Update webhook statistics
-      this.webhookModel.updateOne(
-        { _id: webhookId },
-        {
-          $inc: {
-            'statistics.totalSent': 1,
-            'statistics.totalFailed': 1,
-          },
-          $set: {
-            'statistics.lastFailedDelivery': now,
-          },
-        },
-      ).exec(),
-      
-      // Update event status
-      this.webhookEventModel.updateOne(
-        { _id: eventId },
-        {
-          $set: {
-            status: attemptCount >= this.maxRetries ? 'failed' : 'pending',
-            error: (error as Error).message,
-            nextRetryAt,
-          },
-          $inc: {
-            attemptCount: 1,
-          },
-        },
-      ).exec(),
-    ]);
-  }
-
-  private async getEventAttemptCount(eventId: string): Promise<number> {
-    const event = await this.webhookEventModel.findById(eventId).exec();
-    return event?.attemptCount || 0;
-  }
-
-  private calculateNextRetry(attemptCount: number): Date {
-    if (attemptCount >= this.maxRetries) {
-      return null;
+    if (!webhookEvent) {
+      throw new NotFoundException('Webhook event not found');
     }
-    
-    const delay = this.retryDelays[Math.min(attemptCount, this.retryDelays.length - 1)];
-    return new Date(Date.now() + delay);
+
+    // Update webhook event
+    await this.webhookEventModel.findByIdAndUpdate(webhookEvent._id, {
+      $set: {
+        status: 'delivered' as WebhookEventStatus,
+        deliveredAt: new Date(),
+        responseStatus,
+      },
+    }).exec();
+
+    // Update webhook statistics
+    await this.webhookModel.findByIdAndUpdate(webhook._id, {
+      $inc: {
+        'statistics.totalSent': 1,
+        'statistics.totalSuccessful': 1,
+      },
+      $set: {
+        'statistics.lastSuccessfulDelivery': new Date(),
+        'statistics.lastDeliveryAttempt': new Date(),
+      },
+    }).exec();
+  }
+
+  async handleFailedDelivery(webhook: WebhookDocument, eventId: string, error: Error): Promise<void> {
+    const webhookEvent = await this.webhookEventModel.findOne({
+      webhookId: webhook._id,
+      'payload.id': eventId,
+    }).exec();
+
+    if (!webhookEvent) {
+      throw new NotFoundException('Webhook event not found');
+    }
+
+    const attempts = (webhookEvent.attempts || 0) + 1;
+    const maxAttempts = webhookEvent.maxAttempts || 5;
+    const status = attempts >= maxAttempts ? 'failed' as WebhookEventStatus : 'pending' as WebhookEventStatus;
+
+    // Update webhook event
+    await this.webhookEventModel.findByIdAndUpdate(webhookEvent._id, {
+      $set: {
+        status,
+        attempts,
+        errorMessage: error.message,
+        failedAt: new Date(),
+      },
+    }).exec();
+
+    // Update webhook statistics
+    await this.webhookModel.findByIdAndUpdate(webhook._id, {
+      $inc: {
+        'statistics.totalSent': 1,
+        'statistics.totalFailed': 1,
+      },
+      $set: {
+        'statistics.lastFailedDelivery': new Date(),
+        'statistics.lastDeliveryAttempt': new Date(),
+      },
+    }).exec();
   }
 
   private getPeriodStart(period: string): Date {
     const now = new Date();
-    const value = parseInt(period.slice(0, -1));
-    const unit = period.slice(-1);
-
-    switch (unit) {
-      case 'd':
-        return new Date(now.getTime() - value * 24 * 60 * 60 * 1000);
-      case 'h':
-        return new Date(now.getTime() - value * 60 * 60 * 1000);
-      case 'm':
-        return new Date(now.getTime() - value * 60 * 1000);
+    switch (period) {
+      case '24h':
+        now.setHours(now.getHours() - 24);
+        break;
+      case '7d':
+        now.setDate(now.getDate() - 7);
+        break;
+      case '30d':
       default:
-        return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000); // 30 days default
+        now.setDate(now.getDate() - 30);
+        break;
     }
+    return now;
   }
 } 

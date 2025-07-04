@@ -129,18 +129,10 @@ export class AppsService {
     if (updateAppDto.description !== undefined) app.description = updateAppDto.description;
     
     if (updateAppDto.settings) {
-      if (updateAppDto.settings.maxFileSize !== undefined) {
-        app.settings.maxFileSize = updateAppDto.settings.maxFileSize;
-      }
-      if (updateAppDto.settings.allowedFileTypes !== undefined) {
-        app.settings.allowedFileTypes = updateAppDto.settings.allowedFileTypes;
-      }
-      if (updateAppDto.settings.webhookUrl !== undefined) {
-        app.settings.webhookUrl = updateAppDto.settings.webhookUrl;
-      }
-      if (updateAppDto.settings.rateLimits) {
-        Object.assign(app.settings.rateLimits, updateAppDto.settings.rateLimits);
-      }
+      app.settings = {
+        ...app.settings,
+        ...updateAppDto.settings
+      };
     }
 
     app.updatedAt = new Date();
@@ -231,7 +223,7 @@ export class AppsService {
     if (updates.isActive !== undefined) apiKey.isActive = updates.isActive;
 
     await app.save();
-    this.logger.log(`API key updated: ${apiKey.name} for app ${app.name}`);
+    this.logger.log(`API key updated: ${apiKey.keyName} for app ${app.name}`);
     return app;
   }
 
@@ -259,22 +251,19 @@ export class AppsService {
     app: AppDocument;
   }> {
     const app = await this.getApp(appId, userId);
-    const apiKey = app.apiKeys.id(keyId);
+    const apiKey = app.apiKeys.find(key => key.keyId === keyId);
 
     if (!apiKey) {
       throw new NotFoundException('API key not found');
     }
 
-    const oldKey = apiKey.key;
-    apiKey.key = this.generateApiKey();
-    apiKey.usage = {
-      totalRequests: 0,
-      lastRequestAt: null,
-      lastRequestIp: null,
-    };
+    const oldHash = apiKey.keyHash;
+    const newKey = this.generateApiKey();
+    apiKey.keyHash = newKey;
+    apiKey.lastUsed = null;
 
     await app.save();
-    this.logger.log(`API key regenerated for app ${app.name} (old key: ${oldKey.substring(0, 8)}...)`);
+    this.logger.log(`API key regenerated for app ${app.name} (old hash: ${oldHash.substring(0, 8)}...)`);
     return { apiKey, app };
   }
 
@@ -282,9 +271,13 @@ export class AppsService {
     totalFiles: number;
     totalSize: number;
     apiKeyUsage: Array<{
+      keyId: string;
       keyName: string;
-      totalRequests: number;
+      keyHash: string;
+      permissions: string[];
       lastUsed: Date | null;
+      isActive: boolean;
+      createdAt: Date;
     }>;
     filesByType: Record<string, number>;
     uploadsByDate: Array<{
@@ -304,9 +297,13 @@ export class AppsService {
     const totalSize = sizeAgg[0]?.totalSize || 0;
 
     const apiKeyUsage = app.apiKeys.map(key => ({
-      keyName: key.name,
-      totalRequests: key.usage.totalRequests,
-      lastUsed: key.usage.lastRequestAt,
+      keyId: key.keyId,
+      keyName: key.keyName,
+      keyHash: key.keyHash.substring(0, 8) + '...',
+      permissions: key.permissions,
+      lastUsed: key.lastUsed,
+      isActive: key.isActive,
+      createdAt: key.createdAt
     }));
 
     const typeAgg = await this.fileModel.aggregate([
@@ -352,25 +349,20 @@ export class AppsService {
     user: UserDocument;
   } | null> {
     const app = await this.appModel.findOne({
-      'apiKeys.key': apiKey,
+      'apiKeys.keyHash': apiKey,
       status: 'active',
-    }).populate('userId');
+    });
 
     if (!app) {
       return null;
     }
 
-    const apiKeyObj = app.apiKeys.find(key => key.key === apiKey && key.isActive);
-    if (!apiKeyObj) {
+    const apiKeyObj = app.apiKeys.find(key => key.keyHash === apiKey && key.isActive);
+    if (!apiKeyObj || !apiKeyObj.isActive) {
       return null;
     }
 
-    // Check expiration
-    if (apiKeyObj.expiresAt && apiKeyObj.expiresAt < new Date()) {
-      return null;
-    }
-
-    const user = await this.userModel.findById(app.userId);
+    const user = await this.userModel.findById(app.createdBy);
     if (!user || user.status !== 'active') {
       return null;
     }
