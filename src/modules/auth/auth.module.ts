@@ -7,6 +7,7 @@ import { PassportModule } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { User, UserSchema } from '../../schemas/user.schema';
+import { App, AppSchema } from '../../schemas/app.schema';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
 import { ApiKeyStrategy } from './strategies/api-key.strategy';
@@ -32,6 +33,7 @@ import { ApiKeyStrategy } from './strategies/api-key.strategy';
     // Database Models
     MongooseModule.forFeature([
       { name: User.name, schema: UserSchema },
+      { name: App.name, schema: AppSchema },
     ]),
   ],
   

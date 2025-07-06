@@ -80,4 +80,41 @@ export class UsersService {
   async delete(id: string): Promise<void> {
     await this.userModel.findByIdAndDelete(id).exec();
   }
+
+  async activateUser(id: string, adminId: string): Promise<UserDocument> {
+    const user = await this.userModel.findByIdAndUpdate(
+      id,
+      { status: 'active' },
+      { new: true }
+    ).exec();
+    return user;
+  }
+
+  async resetUserPassword(id: string, adminId: string): Promise<{ message: string }> {
+    const tempPassword = Math.random().toString(36).slice(-8);
+    await this.userModel.findByIdAndUpdate(id, { 
+      password: tempPassword,
+      passwordResetRequired: true 
+    }).exec();
+    return { message: 'Password reset successfully' };
+  }
+
+  async getUserSessions(id: string): Promise<any[]> {
+    // Placeholder implementation
+    return [];
+  }
+
+  async terminateSession(userId: string, sessionId: string): Promise<{ message: string }> {
+    // Placeholder implementation
+    return { message: 'Session terminated successfully' };
+  }
+
+  async suspendUser(id: string, reason: string, adminId: string): Promise<UserDocument> {
+    const user = await this.userModel.findByIdAndUpdate(
+      id,
+      { status: 'suspended', suspensionReason: reason },
+      { new: true }
+    ).exec();
+    return user;
+  }
 } 

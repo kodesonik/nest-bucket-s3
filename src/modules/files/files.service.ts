@@ -69,54 +69,63 @@ export class FilesService {
         }
       }
 
-      // Generate unique path
+      // Generate upload path
       const uploadPath = this.generateUploadPath(userId, appId, options.folderId);
 
-      // Upload to storage
-      const uploadResult = await this.storageService.uploadFile(file, uploadPath, {
-        acl: options.isPublic ? 'public-read' : 'private',
-        metadata: options.metadata,
-      });
+      // Upload file to storage
+      const uploadResult = await this.storageService.uploadFile(
+        file.buffer,
+        file.originalname,
+        uploadPath,
+        file.mimetype,
+      );
 
       // Create file record
       const fileDoc = new this.fileModel({
         userId: new Types.ObjectId(userId),
         appId: new Types.ObjectId(appId),
-        folderId: options.folderId ? new Types.ObjectId(options.folderId) : null,
         filename: file.originalname,
         originalName: file.originalname,
         mimeType: file.mimetype,
         size: file.size,
-        path: uploadResult.key,
-        url: uploadResult.url,
+        key: uploadResult,
+        path: uploadResult,
+        url: uploadResult,
         isPublic: options.isPublic || false,
         tags: options.tags || [],
-        metadata: options.metadata || {},
-        storageProvider: 'digitalocean',
-        bucket: uploadResult.bucket,
-        etag: uploadResult.etag,
+        folderId: options.folderId ? new Types.ObjectId(options.folderId) : null,
+        metadata: {
+          ...options.metadata,
+          bucket: 'default',
+          etag: 'generated',
+        },
+        access: {
+          isPublic: options.isPublic || false,
+          allowedUsers: [],
+          allowedRoles: [],
+        },
         uploadedAt: new Date(),
       });
 
       await fileDoc.save();
 
       // Process file if requested
-      if (options.processFile !== false) {
-        this.processFileAsync(fileDoc, file);
+      if (options.processFile) {
+        await this.processFileAsync(fileDoc, file);
       }
 
       // Trigger webhook
-      await this.webhookService.triggerEvent(appId, 'file.uploaded', {
+      await this.webhookService.triggerEvent(fileDoc.appId.toString(), 'file.uploaded', {
         fileId: fileDoc._id,
         filename: fileDoc.filename,
         size: fileDoc.size,
         mimeType: fileDoc.mimeType,
       });
 
-      this.logger.log(`File uploaded successfully: ${fileDoc.filename} for user ${userId}`);
+      this.logger.log(`File uploaded: ${fileDoc.filename}`);
       return fileDoc;
     } catch (error) {
-      this.logger.error(`Failed to upload file: ${(error as Error).message}`);
+      this.logger.error(`File upload failed: ${(error as Error).message}`);
       throw error;
     }
   }
@@ -463,8 +472,11 @@ export class FilesService {
         file.mimeType,
       );
 
-      if (result.success) {
-        file.processing = result.processing;
+      if (result.success && result.metadata) {
+        file.metadata = {
+          ...file.metadata,
+          ...result.metadata,
+        };
         await file.save();
         
         this.logger.log(`File processed successfully: ${file.filename}`);

@@ -51,11 +51,13 @@ export class Folder {
   status: string;
 
   @ApiProperty({ description: 'Folder statistics' })
-  @Prop({
-    fileCount: { type: Number, default: 0 },
-    totalSize: { type: Number, default: 0 },
-    subfolderCount: { type: Number, default: 0 },
-    lastActivity: { type: Date },
+  @Prop({ 
+    type: Object, 
+    default: {
+      fileCount: 0,
+      totalSize: 0,
+      subfolderCount: 0
+    }
   })
   stats: {
     fileCount: number;
@@ -65,13 +67,15 @@ export class Folder {
   };
 
   @ApiProperty({ description: 'Folder settings' })
-  @Prop({
-    autoSort: { type: String, enum: ['name', 'date', 'size', 'type'], default: 'name' },
-    sortOrder: { type: String, enum: ['asc', 'desc'], default: 'asc' },
-    defaultView: { type: String, enum: ['grid', 'list'], default: 'grid' },
-    allowUploads: { type: Boolean, default: true },
-    maxFileSize: { type: Number },
-    allowedFileTypes: [{ type: String }],
+  @Prop({ 
+    type: Object, 
+    default: {
+      autoSort: 'name',
+      sortOrder: 'asc',
+      defaultView: 'grid',
+      allowUploads: true,
+      allowedFileTypes: []
+    }
   })
   settings: {
     autoSort: string;

@@ -53,14 +53,9 @@ export class AuthController {
   async login(@Body() loginDto: LoginDto, @Request() req: any) {
     try {
       const result = await this.authService.login(
-        loginDto.email,
-        loginDto.password,
-        {
-          ipAddress: req.ip,
-          userAgent: req.get('User-Agent'),
-          rememberDevice: loginDto.rememberDevice,
-          twoFactorCode: loginDto.twoFactorCode,
-        },
+        loginDto,
+        req.ip,
+        req.get('User-Agent'),
       );
 
       return {
@@ -160,10 +155,7 @@ export class AuthController {
   @ApiResponse({ status: 400, description: 'Invalid or expired token' })
   async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
     try {
-      await this.authService.resetPassword(
-        resetPasswordDto.token,
-        resetPasswordDto.newPassword,
-      );
+      await this.authService.resetPassword(resetPasswordDto);
       return {
         success: true,
         message: 'Password reset successfully',
@@ -184,11 +176,7 @@ export class AuthController {
     @Body() changePasswordDto: ChangePasswordDto,
   ) {
     try {
-      await this.authService.changePassword(
-        req.user.userId,
-        changePasswordDto.currentPassword,
-        changePasswordDto.newPassword,
-      );
+      await this.authService.changePasswordWithUserId(req.user.userId, changePasswordDto);
       return {
         success: true,
         message: 'Password changed successfully',
@@ -255,7 +243,7 @@ export class AuthController {
   @ApiResponse({ status: 200, description: '2FA setup initiated' })
   async enable2FA(@Request() req: any, @Body() enable2FADto: Enable2FADto) {
     try {
-      const result = await this.authService.enable2FA(req.user.userId, enable2FADto.password);
+      const result = await this.authService.enable2FA(req.user.userId, enable2FADto);
       return {
         success: true,
         message: '2FA setup initiated',
@@ -273,11 +261,7 @@ export class AuthController {
   @ApiResponse({ status: 200, description: '2FA activated successfully' })
   async verify2FA(@Request() req: any, @Body() verify2FADto: Verify2FADto) {
     try {
-      const result = await this.authService.verify2FA(
-        req.user.userId,
-        verify2FADto.token,
-        verify2FADto.backupCode,
-      );
+      const result = await this.authService.verify2FASetup(req.user.userId, verify2FADto);
       return {
         success: true,
         message: '2FA activated successfully',
@@ -298,7 +282,7 @@ export class AuthController {
     @Body() body: { password: string; token?: string },
   ) {
     try {
-      await this.authService.disable2FA(req.user.userId, body.password, body.token);
+      await this.authService.disable2FA(req.user.userId, body.password);
       return {
         success: true,
         message: '2FA disabled successfully',

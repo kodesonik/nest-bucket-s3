@@ -53,25 +53,7 @@ export class FilesController {
   @UseInterceptors(FileInterceptor('file'))
   @ApiOperation({ summary: 'Upload a single file' })
   @ApiConsumes('multipart/form-data')
-  @ApiResponse({ 
-    status: 201, 
-    description: 'File uploaded successfully',
-    schema: {
-      type: 'object',
-      properties: {
-        id: { type: 'string' },
-        filename: { type: 'string' },
-        originalName: { type: 'string' },
-        url: { type: 'string' },
-        size: { type: 'number' },
-        mimeType: { type: 'string' },
-        thumbnailUrl: { type: 'string' },
-        optimizedUrl: { type: 'string' },
-      }
-    }
-  })
-  @ApiResponse({ status: 400, description: 'Invalid file or upload parameters' })
-  @ApiResponse({ status: 413, description: 'File too large' })
+  @ApiResponse({ status: 201, description: 'File uploaded successfully' })
   async uploadFile(
     @UploadedFile() file: UploadedFile,
     @Body() uploadDto: UploadFileDto,
@@ -83,10 +65,9 @@ export class FilesController {
 
     return this.filesService.uploadFile(
       file,
+      request.app._id,
+      request.app._id,
       uploadDto,
-      request.app,
-      request.ip,
-      request.headers['user-agent'],
     );
   }
 
@@ -118,10 +99,9 @@ export class FilesController {
 
     return this.filesService.uploadMultipleFiles(
       files,
+      request.app._id,
+      request.app._id,
       uploadDto,
-      request.app,
-      request.ip,
-      request.headers['user-agent'],
     );
   }
 
@@ -171,10 +151,15 @@ export class FilesController {
     }
   })
   async getFiles(
-    @Query() query: GetFilesQueryDto,
     @Req() request: any,
+    @Query() query: GetFilesQueryDto,
   ) {
-    return this.filesService.getFiles(query, request.app._id);
+    return this.filesService.getFiles(
+      request.app._id,
+      query,
+      query.page || 1,
+      query.limit || 20,
+    );
   }
 
   @Get(':id')
@@ -194,9 +179,9 @@ export class FilesController {
   @ApiResponse({ status: 404, description: 'File not found' })
   async downloadFile(
     @Param('id') id: string,
-    @Query('version') version?: string,
     @Req() request: any,
     @Res({ passthrough: true }) response: Response,
+    @Query('version') version?: string,
   ): Promise<StreamableFile> {
     const result = await this.filesService.downloadFile(
       id,
@@ -239,7 +224,7 @@ export class FilesController {
     @Body() updateDto: UpdateFileDto,
     @Req() request: any,
   ) {
-    return this.filesService.updateFile(id, updateDto, request.app._id);
+    return this.filesService.updateFile(id, request.app._id, updateDto);
   }
 
   @Delete(':id')
@@ -248,14 +233,10 @@ export class FilesController {
   @ApiResponse({ status: 404, description: 'File not found' })
   async deleteFile(
     @Param('id') id: string,
-    @Query('permanent') permanent?: boolean,
     @Req() request: any,
+    @Query('permanent') permanent?: boolean,
   ) {
-    return this.filesService.deleteFile(
-      id,
-      request.app._id,
-      permanent === true,
-    );
+    return this.filesService.deleteFile(id, request.app._id);
   }
 
   @Post('bulk-operation')
@@ -303,6 +284,7 @@ export class FilesController {
   @ApiOperation({ summary: 'Search files by content, name, or metadata' })
   @ApiResponse({ status: 200, description: 'Search results retrieved successfully' })
   async searchFiles(
+    @Req() request: any,
     @Query('q') query: string,
     @Query('type') type?: string,
     @Query('dateFrom') dateFrom?: string,
@@ -311,7 +293,6 @@ export class FilesController {
     @Query('maxSize') maxSize?: number,
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 20,
-    @Req() request: any,
   ) {
     return this.filesService.searchFiles({
       query,
@@ -331,19 +312,17 @@ export class FilesController {
   @ApiResponse({ status: 200, description: 'Share link generated successfully' })
   async generateShareLink(
     @Param('id') id: string,
+    @Req() request: any,
     @Query('expiresIn') expiresIn?: number,
     @Query('password') password?: string,
     @Query('maxDownloads') maxDownloads?: number,
-    @Req() request: any,
   ) {
     return this.filesService.generateShareLink(
       id,
       request.app._id,
-      {
-        expiresIn,
-        password,
-        maxDownloads,
-      },
+      expiresIn,
+      password,
+      maxDownloads,
     );
   }
 

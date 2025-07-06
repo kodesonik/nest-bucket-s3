@@ -27,18 +27,7 @@ export class App {
   status: string;
 
   @ApiProperty({ description: 'Application API keys' })
-  @Prop([{
-    keyId: { type: String, required: true, unique: true },
-    keyName: { type: String, required: true },
-    keyHash: { type: String, required: true },
-    permissions: [{
-      type: String,
-      enum: ['read', 'write', 'delete', 'admin'],
-    }],
-    lastUsed: { type: Date },
-    isActive: { type: Boolean, default: true },
-    createdAt: { type: Date, default: Date.now },
-  }])
+  @Prop({ type: Array, default: [] })
   apiKeys: Array<{
     keyId: string;
     keyName: string;
@@ -50,11 +39,14 @@ export class App {
   }>;
 
   @ApiProperty({ description: 'Application usage limits' })
-  @Prop({
-    maxFileSize: { type: Number, default: 104857600 }, // 100MB
-    maxFilesPerDay: { type: Number, default: 1000 },
-    maxStorageSize: { type: Number, default: 10737418240 }, // 10GB
-    allowedFileTypes: [{ type: String }],
+  @Prop({ 
+    type: Object, 
+    default: {
+      maxFileSize: 104857600, // 100MB
+      maxFilesPerDay: 1000,
+      maxStorageSize: 10737418240, // 10GB
+      allowedFileTypes: []
+    }
   })
   limits: {
     maxFileSize: number;
@@ -64,11 +56,13 @@ export class App {
   };
 
   @ApiProperty({ description: 'Application usage statistics' })
-  @Prop({
-    totalFiles: { type: Number, default: 0 },
-    totalSize: { type: Number, default: 0 },
-    apiCalls: { type: Number, default: 0 },
-    lastActivity: { type: Date },
+  @Prop({ 
+    type: Object, 
+    default: {
+      totalFiles: 0,
+      totalSize: 0,
+      apiCalls: 0
+    }
   })
   usage: {
     totalFiles: number;
@@ -78,14 +72,15 @@ export class App {
   };
 
   @ApiProperty({ description: 'Application settings' })
-  @Prop({
-    autoDeleteTempFiles: { type: Boolean, default: true },
-    tempFileRetentionDays: { type: Number, default: 7 },
-    generateThumbnails: { type: Boolean, default: true },
-    compressImages: { type: Boolean, default: true },
-    allowPublicAccess: { type: Boolean, default: false },
-    webhookUrl: { type: String },
-    webhookSecret: { type: String },
+  @Prop({ 
+    type: Object, 
+    default: {
+      autoDeleteTempFiles: true,
+      tempFileRetentionDays: 7,
+      generateThumbnails: true,
+      compressImages: true,
+      allowPublicAccess: false
+    }
   })
   settings: {
     autoDeleteTempFiles: boolean;

@@ -1,0 +1,144 @@
+### Load environment variables
+# @name loadEnv
+< ./environment.rest
+
+### Webhooks Module Tests
+
+### Create webhook
+POST {{baseUrl}}/webhooks
+Authorization: Bearer {{accessToken}}
+Content-Type: {{contentType}}
+
+{
+  "name": "File Upload Webhook",
+  "url": "https://example.com/webhook",
+  "events": ["file.uploaded", "file.processed"],
+  "method": "POST",
+  "contentType": "application/json",
+  "headers": {
+    "X-Custom-Header": "value"
+  },
+  "secret": "webhook-secret-key",
+  "isActive": true,
+  "retryPolicy": {
+    "maxRetries": 3,
+    "retryDelay": 1000
+  }
+}
+
+### Get all webhooks
+GET {{baseUrl}}/webhooks
+Authorization: Bearer {{accessToken}}
+
+### Get webhooks with pagination
+GET {{baseUrl}}/webhooks?page=1&limit=10&status=active
+Authorization: Bearer {{accessToken}}
+
+### Get webhook by ID
+GET {{baseUrl}}/webhooks/{{webhookId}}
+Authorization: Bearer {{accessToken}}
+
+### Update webhook
+PUT {{baseUrl}}/webhooks/{{webhookId}}
+Authorization: Bearer {{accessToken}}
+Content-Type: {{contentType}}
+
+{
+  "name": "Updated Webhook Name",
+  "url": "https://example.com/updated-webhook",
+  "events": ["file.uploaded", "file.processed", "file.deleted"],
+  "method": "POST",
+  "contentType": "application/json",
+  "headers": {
+    "X-Updated-Header": "updated-value"
+  },
+  "secret": "updated-webhook-secret",
+  "isActive": true,
+  "retryPolicy": {
+    "maxRetries": 5,
+    "retryDelay": 2000
+  }
+}
+
+### Toggle webhook status
+PATCH {{baseUrl}}/webhooks/{{webhookId}}/toggle
+Authorization: Bearer {{accessToken}}
+
+### Test webhook
+POST {{baseUrl}}/webhooks/{{webhookId}}/test
+Authorization: Bearer {{accessToken}}
+Content-Type: {{contentType}}
+
+{
+  "eventType": "file.uploaded",
+  "testData": {
+    "fileId": "{{fileId}}",
+    "filename": "test.txt",
+    "size": 1024
+  }
+}
+
+### Get webhook events
+GET {{baseUrl}}/webhooks/{{webhookId}}/events
+Authorization: Bearer {{accessToken}}
+
+### Get webhook events with pagination
+GET {{baseUrl}}/webhooks/{{webhookId}}/events?page=1&limit=10&status=success
+Authorization: Bearer {{accessToken}}
+
+### Get webhook event by ID
+GET {{baseUrl}}/webhooks/{{webhookId}}/events/{{eventId}}
+Authorization: Bearer {{accessToken}}
+
+### Retry webhook event
+POST {{baseUrl}}/webhooks/{{webhookId}}/events/{{eventId}}/retry
+Authorization: Bearer {{accessToken}}
+
+### Get webhook statistics
+GET {{baseUrl}}/webhooks/{{webhookId}}/stats
+Authorization: Bearer {{accessToken}}
+
+### Get available event types
+GET {{baseUrl}}/webhooks/event-types
+Authorization: Bearer {{accessToken}}
+
+### Delete webhook
+DELETE {{baseUrl}}/webhooks/{{webhookId}}
+Authorization: Bearer {{accessToken}}
+
+### Get webhook logs
+GET {{baseUrl}}/webhooks/{{webhookId}}/logs
+Authorization: Bearer {{accessToken}}
+
+### Get webhook logs with filters
+GET {{baseUrl}}/webhooks/{{webhookId}}/logs?startDate=2024-01-01&endDate=2024-12-31&status=failed
+Authorization: Bearer {{accessToken}}
+
+### Bulk update webhooks
+PATCH {{baseUrl}}/webhooks/bulk-update
+Authorization: Bearer {{accessToken}}
+Content-Type: {{contentType}}
+
+{
+  "webhookIds": ["{{webhookId}}", "507f1f77bcf86cd799439018"],
+  "updates": {
+    "isActive": false
+  }
+}
+
+### Get webhook delivery attempts
+GET {{baseUrl}}/webhooks/{{webhookId}}/events/{{eventId}}/attempts
+Authorization: Bearer {{accessToken}}
+
+### Regenerate webhook secret
+POST {{baseUrl}}/webhooks/{{webhookId}}/regenerate-secret
+Authorization: Bearer {{accessToken}}
+
+### Validate webhook URL
+POST {{baseUrl}}/webhooks/validate-url
+Authorization: Bearer {{accessToken}}
+Content-Type: {{contentType}}
+
+{
+  "url": "https://example.com/webhook"
+} 

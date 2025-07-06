@@ -35,15 +35,13 @@ export class User {
   status: string;
 
   @ApiProperty({ description: 'User profile information' })
-  @Prop({
-    avatar: { type: String },
-    bio: { type: String, maxlength: 500 },
-    company: { type: String },
-    website: { type: String },
-    location: { type: String },
-    timezone: { type: String, default: 'UTC' },
-    language: { type: String, default: 'en' },
-    theme: { type: String, enum: ['light', 'dark', 'auto'], default: 'light' },
+  @Prop({ 
+    type: Object, 
+    default: {
+      timezone: 'UTC',
+      language: 'en',
+      theme: 'light'
+    }
   })
   profile: {
     avatar?: string;
@@ -57,15 +55,18 @@ export class User {
   };
 
   @ApiProperty({ description: 'User permissions and access control' })
-  @Prop({
-    canCreateApps: { type: Boolean, default: true },
-    canManageUsers: { type: Boolean, default: false },
-    canAccessAnalytics: { type: Boolean, default: false },
-    canManageSystem: { type: Boolean, default: false },
-    maxApps: { type: Number, default: 5 },
-    maxStorageGB: { type: Number, default: 10 },
-    maxFilesPerApp: { type: Number, default: 10000 },
-    allowedFileTypes: [{ type: String }],
+  @Prop({ 
+    type: Object, 
+    default: {
+      canCreateApps: true,
+      canManageUsers: false,
+      canAccessAnalytics: false,
+      canManageSystem: false,
+      maxApps: 5,
+      maxStorageGB: 10,
+      maxFilesPerApp: 10000,
+      allowedFileTypes: []
+    }
   })
   permissions: {
     canCreateApps: boolean;
@@ -79,11 +80,12 @@ export class User {
   };
 
   @ApiProperty({ description: 'Two-factor authentication settings' })
-  @Prop({
-    enabled: { type: Boolean, default: false },
-    secret: { type: String },
-    backupCodes: [{ type: String }],
-    lastUsed: { type: Date },
+  @Prop({ 
+    type: Object, 
+    default: {
+      enabled: false,
+      backupCodes: []
+    }
   })
   twoFactorAuth: {
     enabled: boolean;
@@ -93,20 +95,13 @@ export class User {
   };
 
   @ApiProperty({ description: 'Login and security information' })
-  @Prop({
-    lastLogin: { type: Date },
-    lastLoginIp: { type: String },
-    loginCount: { type: Number, default: 0 },
-    failedLoginAttempts: { type: Number, default: 0 },
-    lockedUntil: { type: Date },
-    passwordChangedAt: { type: Date },
-    sessionTokens: [{ 
-      token: { type: String },
-      createdAt: { type: Date, default: Date.now },
-      expiresAt: { type: Date },
-      userAgent: { type: String },
-      ipAddress: { type: String },
-    }],
+  @Prop({ 
+    type: Object, 
+    default: {
+      loginCount: 0,
+      failedLoginAttempts: 0,
+      sessionTokens: []
+    }
   })
   security: {
     lastLogin?: Date;
@@ -125,11 +120,11 @@ export class User {
   };
 
   @ApiProperty({ description: 'Email verification' })
-  @Prop({
-    isVerified: { type: Boolean, default: false },
-    verificationToken: { type: String },
-    verificationTokenExpires: { type: Date },
-    verifiedAt: { type: Date },
+  @Prop({ 
+    type: Object, 
+    default: {
+      isVerified: false
+    }
   })
   emailVerification: {
     isVerified: boolean;
@@ -139,10 +134,11 @@ export class User {
   };
 
   @ApiProperty({ description: 'Password reset information' })
-  @Prop({
-    resetToken: { type: String },
-    resetTokenExpires: { type: Date },
-    resetTokenUsed: { type: Boolean, default: false },
+  @Prop({ 
+    type: Object, 
+    default: {
+      resetTokenUsed: false
+    }
   })
   passwordReset: {
     resetToken?: string;
@@ -151,21 +147,24 @@ export class User {
   };
 
   @ApiProperty({ description: 'User preferences and settings' })
-  @Prop({
-    notifications: {
-      email: { type: Boolean, default: true },
-      push: { type: Boolean, default: true },
-      fileUploaded: { type: Boolean, default: true },
-      storageQuotaWarning: { type: Boolean, default: true },
-      securityAlerts: { type: Boolean, default: true },
-      weeklyReport: { type: Boolean, default: false },
-    },
-    dashboard: {
-      defaultView: { type: String, enum: ['grid', 'list'], default: 'grid' },
-      itemsPerPage: { type: Number, default: 20 },
-      showHiddenFiles: { type: Boolean, default: false },
-      autoRefresh: { type: Boolean, default: true },
-    },
+  @Prop({ 
+    type: Object, 
+    default: {
+      notifications: {
+        email: true,
+        push: true,
+        fileUploaded: true,
+        storageQuotaWarning: true,
+        securityAlerts: true,
+        weeklyReport: false
+      },
+      dashboard: {
+        defaultView: 'grid',
+        itemsPerPage: 20,
+        showHiddenFiles: false,
+        autoRefresh: true
+      }
+    }
   })
   preferences: {
     notifications: {
@@ -185,14 +184,12 @@ export class User {
   };
 
   @ApiProperty({ description: 'User subscription and billing' })
-  @Prop({
-    plan: { type: String, enum: ['free', 'pro', 'enterprise'], default: 'free' },
-    subscriptionId: { type: String },
-    subscriptionStatus: { type: String },
-    currentPeriodStart: { type: Date },
-    currentPeriodEnd: { type: Date },
-    cancelAtPeriodEnd: { type: Boolean, default: false },
-    trialEndsAt: { type: Date },
+  @Prop({ 
+    type: Object, 
+    default: {
+      plan: 'free',
+      cancelAtPeriodEnd: false
+    }
   })
   subscription: {
     plan: string;
@@ -205,13 +202,14 @@ export class User {
   };
 
   @ApiProperty({ description: 'User activity tracking' })
-  @Prop({
-    lastActivity: { type: Date },
-    totalUploads: { type: Number, default: 0 },
-    totalDownloads: { type: Number, default: 0 },
-    storageUsed: { type: Number, default: 0 },
-    apiCallsCount: { type: Number, default: 0 },
-    lastApiCall: { type: Date },
+  @Prop({ 
+    type: Object, 
+    default: {
+      totalUploads: 0,
+      totalDownloads: 0,
+      storageUsed: 0,
+      apiCallsCount: 0
+    }
   })
   activity: {
     lastActivity?: Date;
@@ -223,12 +221,11 @@ export class User {
   };
 
   @ApiProperty({ description: 'Terms and privacy acceptance' })
-  @Prop({
-    termsAcceptedAt: { type: Date },
-    privacyAcceptedAt: { type: Date },
-    termsVersion: { type: String },
-    privacyVersion: { type: String },
-    marketingConsent: { type: Boolean, default: false },
+  @Prop({ 
+    type: Object, 
+    default: {
+      marketingConsent: false
+    }
   })
   legal: {
     termsAcceptedAt?: Date;
@@ -255,11 +252,9 @@ export class User {
   createdBy?: string;
 
   @ApiProperty({ description: 'Account deletion information' })
-  @Prop({
-    requestedAt: { type: Date },
-    reason: { type: String },
-    scheduledFor: { type: Date },
-    completedAt: { type: Date },
+  @Prop({ 
+    type: Object, 
+    required: false
   })
   deletion?: {
     requestedAt: Date;

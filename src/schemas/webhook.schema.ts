@@ -89,16 +89,15 @@ export class Webhook {
   contentType: WebhookContentType;
 
   @ApiProperty({ description: 'Retry configuration' })
-  @Prop({
-    enabled: { type: Boolean, default: true },
-    maxAttempts: { type: Number, default: 5, min: 1, max: 10 },
-    backoffStrategy: { 
-      type: String, 
-      enum: ['linear', 'exponential', 'fixed'], 
-      default: 'exponential' 
-    },
-    initialDelay: { type: Number, default: 1000 }, // milliseconds
-    maxDelay: { type: Number, default: 300000 }, // 5 minutes
+  @Prop({ 
+    type: Object, 
+    default: {
+      enabled: true,
+      maxAttempts: 5,
+      backoffStrategy: 'exponential',
+      initialDelay: 1000,
+      maxDelay: 300000
+    }
   })
   retryConfig: {
     enabled: boolean;
@@ -109,16 +108,13 @@ export class Webhook {
   };
 
   @ApiProperty({ description: 'Filter configuration' })
-  @Prop({
-    fileTypes: [{ type: String }], // Filter by file types
-    folderPaths: [{ type: String }], // Filter by folder paths
-    minFileSize: { type: Number }, // Minimum file size in bytes
-    maxFileSize: { type: Number }, // Maximum file size in bytes
-    conditions: [{
-      field: { type: String },
-      operator: { type: String, enum: ['eq', 'ne', 'gt', 'gte', 'lt', 'lte', 'in', 'nin', 'contains'] },
-      value: { type: String }
-    }]
+  @Prop({ 
+    type: Object, 
+    default: {
+      fileTypes: [],
+      folderPaths: [],
+      conditions: []
+    }
   })
   filters: {
     fileTypes: string[];
@@ -133,15 +129,15 @@ export class Webhook {
   };
 
   @ApiProperty({ description: 'Webhook delivery statistics' })
-  @Prop({
-    totalSent: { type: Number, default: 0 },
-    totalSuccessful: { type: Number, default: 0 },
-    totalFailed: { type: Number, default: 0 },
-    successRate: { type: Number, default: 0 },
-    averageResponseTime: { type: Number, default: 0 },
-    lastSuccessfulDelivery: { type: Date },
-    lastFailedDelivery: { type: Date },
-    lastDeliveryAttempt: { type: Date },
+  @Prop({ 
+    type: Object, 
+    default: {
+      totalSent: 0,
+      totalSuccessful: 0,
+      totalFailed: 0,
+      successRate: 0,
+      averageResponseTime: 0
+    }
   })
   statistics: {
     totalSent: number;
@@ -155,11 +151,14 @@ export class Webhook {
   };
 
   @ApiProperty({ description: 'Rate limiting configuration' })
-  @Prop({
-    enabled: { type: Boolean, default: false },
-    requestsPerMinute: { type: Number, default: 60 },
-    requestsPerHour: { type: Number, default: 1000 },
-    requestsPerDay: { type: Number, default: 10000 },
+  @Prop({ 
+    type: Object, 
+    default: {
+      enabled: false,
+      requestsPerMinute: 60,
+      requestsPerHour: 1000,
+      requestsPerDay: 10000
+    }
   })
   rateLimit: {
     enabled: boolean;
@@ -169,13 +168,14 @@ export class Webhook {
   };
 
   @ApiProperty({ description: 'Security configuration' })
-  @Prop({
-    verifySSL: { type: Boolean, default: true },
-    allowedIPs: [{ type: String }], // IP whitelist
-    blockedIPs: [{ type: String }], // IP blacklist
-    requireAuth: { type: Boolean, default: false },
-    authType: { type: String, enum: ['basic', 'bearer', 'custom'] },
-    authValue: { type: String },
+  @Prop({ 
+    type: Object, 
+    default: {
+      verifySSL: true,
+      allowedIPs: [],
+      blockedIPs: [],
+      requireAuth: false
+    }
   })
   security: {
     verifySSL: boolean;
@@ -211,11 +211,13 @@ export class Webhook {
   activeInMaintenance: boolean;
 
   @ApiProperty({ description: 'Schedule configuration for delayed webhooks' })
-  @Prop({
-    enabled: { type: Boolean, default: false },
-    delay: { type: Number, default: 0 }, // Delay in milliseconds
-    cronExpression: { type: String }, // For scheduled webhooks
-    timezone: { type: String, default: 'UTC' },
+  @Prop({ 
+    type: Object, 
+    default: {
+      enabled: false,
+      delay: 0,
+      timezone: 'UTC'
+    }
   })
   schedule: {
     enabled: boolean;
@@ -225,12 +227,14 @@ export class Webhook {
   };
 
   @ApiProperty({ description: 'Transformation rules for payload' })
-  @Prop({
-    enabled: { type: Boolean, default: false },
-    template: { type: String }, // JSON template for payload transformation
-    includeFields: [{ type: String }], // Fields to include
-    excludeFields: [{ type: String }], // Fields to exclude
-    customFields: { type: Map, of: String }, // Custom fields to add
+  @Prop({ 
+    type: Object, 
+    default: {
+      enabled: false,
+      includeFields: [],
+      excludeFields: [],
+      customFields: new Map()
+    }
   })
   transformation: {
     enabled: boolean;
@@ -253,12 +257,9 @@ export class Webhook {
   lastTestedAt?: Date;
 
   @ApiProperty({ description: 'Last test result' })
-  @Prop({
-    success: { type: Boolean },
-    responseTime: { type: Number },
-    statusCode: { type: Number },
-    error: { type: String },
-    testedAt: { type: Date },
+  @Prop({ 
+    type: Object, 
+    required: false
   })
   lastTestResult?: {
     success: boolean;

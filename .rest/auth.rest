@@ -1,0 +1,101 @@
+### Load environment variables
+# < ./environment.rest
+
+### Environment Variables
+@baseUrl = http://localhost:3000/api
+@apiVersion = v1
+@contentType = application/json
+
+### Authentication tokens (replace with actual tokens)
+@accessToken = your-access-token-here
+@refreshToken = your-refresh-token-here
+@adminToken = your-admin-token-here
+@apiKey = your-api-key-here
+
+### Sample IDs (replace with actual IDs from your database)
+@userId = 507f1f77bcf86cd799439011
+@fileId = 507f1f77bcf86cd799439012
+@webhookId = 507f1f77bcf86cd799439013
+@appId = 507f1f77bcf86cd799439014
+@eventId = 507f1f77bcf86cd799439015 
+
+### Auth Module Tests
+
+### Register new user
+POST {{baseUrl}}/auth/register
+Content-Type: {{contentType}}
+
+{
+  "email": "test@example.com",
+  "password": "Password123@",
+  "fullName": "Test User",
+  "acceptTerms": true,
+  "acceptPrivacy": true,
+  "marketingConsent": false
+}
+
+### Login user
+POST {{baseUrl}}/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "test@example.com",
+  "password": "password123"
+}
+
+### Refresh token
+POST {{baseUrl}}/auth/refresh
+Content-Type: {{contentType}}
+
+{
+  "refreshToken": "{{refreshToken}}"
+}
+
+### Get current user profile
+GET {{baseUrl}}/auth/profile
+Authorization: Bearer {{accessToken}}
+
+### Update user profile
+PUT {{baseUrl}}/auth/profile
+Authorization: Bearer {{accessToken}}
+Content-Type: {{contentType}}
+
+{
+  "name": "Updated Name",
+  "email": "updated@example.com"
+}
+
+### Change password
+POST {{baseUrl}}/auth/change-password
+Authorization: Bearer {{accessToken}}
+Content-Type: {{contentType}}
+
+{
+  "currentPassword": "password123",
+  "newPassword": "newPassword123"
+}
+
+### Request password reset
+POST {{baseUrl}}/auth/forgot-password
+Content-Type: {{contentType}}
+
+{
+  "email": "test@example.com"
+}
+
+### Reset password
+POST {{baseUrl}}/auth/reset-password
+Content-Type: {{contentType}}
+
+{
+  "token": "reset-token-here",
+  "newPassword": "newPassword123"
+}
+
+### Logout
+POST {{baseUrl}}/auth/logout
+Authorization: Bearer {{accessToken}}
+
+### Logout all sessions
+POST {{baseUrl}}/auth/logout-all
+Authorization: Bearer {{accessToken}} 

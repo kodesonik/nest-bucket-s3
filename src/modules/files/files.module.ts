@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { MulterModule } from '@nestjs/platform-express';
+import { HttpModule } from '@nestjs/axios';
 
 import { FilesService } from './files.service';
 import { FilesController } from './files.controller';
@@ -18,6 +19,7 @@ import { WebhookEvent, WebhookEventSchema } from '../../schemas/webhook-event.sc
 @Module({
   imports: [
     ConfigModule,
+    HttpModule,
     MongooseModule.forFeature([
       { name: File.name, schema: FileSchema },
       { name: Folder.name, schema: FolderSchema },

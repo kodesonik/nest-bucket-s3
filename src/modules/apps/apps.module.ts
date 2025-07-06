@@ -14,6 +14,7 @@ import { File, FileSchema } from '../../schemas/file.schema';
     MongooseModule.forFeature([
       { name: App.name, schema: AppSchema },
       { name: User.name, schema: UserSchema },
+      { name: File.name, schema: FileSchema },
     ]),
   ],
   

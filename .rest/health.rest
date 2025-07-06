@@ -1,0 +1,41 @@
+### Load environment variables
+# @name loadEnv
+< ./environment.rest
+
+### Health Module Tests
+
+### Basic health check
+GET {{baseUrl}}/health
+
+### Detailed health check
+GET {{baseUrl}}/health/detailed
+
+### Database health check
+GET {{baseUrl}}/health/database
+
+### Cache health check
+GET {{baseUrl}}/health/cache
+
+### Storage health check
+GET {{baseUrl}}/health/storage
+
+### External services health check
+GET {{baseUrl}}/health/external
+
+### Memory usage check
+GET {{baseUrl}}/health/memory
+
+### Disk usage check
+GET {{baseUrl}}/health/disk
+
+### System uptime
+GET {{baseUrl}}/health/uptime
+
+### API status
+GET {{baseUrl}}/health/api
+
+### Readiness probe
+GET {{baseUrl}}/health/ready
+
+### Liveness probe
+GET {{baseUrl}}/health/live 

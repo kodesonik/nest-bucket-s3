@@ -1,0 +1,144 @@
+### Load environment variables
+# @name loadEnv
+< ./environment.rest
+
+### Files Module Tests
+
+### Upload file
+POST {{baseUrl}}/files/upload
+Authorization: Bearer {{accessToken}}
+Content-Type: multipart/form-data
+
+< ./test-file.txt
+
+### Upload multiple files
+POST {{baseUrl}}/files/upload-multiple
+Authorization: Bearer {{accessToken}}
+Content-Type: multipart/form-data
+
+< ./test-file1.txt
+< ./test-file2.txt
+
+### Upload file with processing options
+POST {{baseUrl}}/files/upload
+Authorization: Bearer {{accessToken}}
+Content-Type: multipart/form-data
+
+{
+  "preserveOriginal": true,
+  "folder": "uploads",
+  "analyzeContent": true,
+  "compressVideo": true,
+  "performOCR": false,
+  "analyzeArchive": true,
+  "extractArchive": false,
+  "maxWidth": 1920,
+  "maxHeight": 1080,
+  "quality": 85,
+  "thumbnailWidth": 300,
+  "thumbnailHeight": 200,
+  "extractText": true
+}
+
+### Get all files
+GET {{baseUrl}}/files
+Authorization: Bearer {{accessToken}}
+
+### Get files with pagination and filters
+GET {{baseUrl}}/files?page=1&limit=10&type=image&sort=createdAt&order=desc
+Authorization: Bearer {{accessToken}}
+
+### Search files
+GET {{baseUrl}}/files?search=document
+Authorization: Bearer {{accessToken}}
+
+### Get file by ID
+GET {{baseUrl}}/files/{{fileId}}
+Authorization: Bearer {{accessToken}}
+
+### Download file
+GET {{baseUrl}}/files/{{fileId}}/download
+Authorization: Bearer {{accessToken}}
+
+### Get file thumbnail
+GET {{baseUrl}}/files/{{fileId}}/thumbnail
+Authorization: Bearer {{accessToken}}
+
+### Get file preview
+GET {{baseUrl}}/files/{{fileId}}/preview
+Authorization: Bearer {{accessToken}}
+
+### Update file metadata
+PUT {{baseUrl}}/files/{{fileId}}
+Authorization: Bearer {{accessToken}}
+Content-Type: {{contentType}}
+
+{
+  "filename": "updated-filename.txt",
+  "description": "Updated file description",
+  "tags": ["document", "important"],
+  "isPublic": false
+}
+
+### Move file to folder
+PATCH {{baseUrl}}/files/{{fileId}}/move
+Authorization: Bearer {{accessToken}}
+Content-Type: {{contentType}}
+
+{
+  "folder": "documents"
+}
+
+### Copy file
+POST {{baseUrl}}/files/{{fileId}}/copy
+Authorization: Bearer {{accessToken}}
+Content-Type: {{contentType}}
+
+{
+  "newFilename": "copy-of-file.txt",
+  "folder": "copies"
+}
+
+### Share file
+POST {{baseUrl}}/files/{{fileId}}/share
+Authorization: Bearer {{accessToken}}
+Content-Type: {{contentType}}
+
+{
+  "expiresAt": "2024-12-31T23:59:59Z",
+  "password": "sharePassword123",
+  "allowDownload": true
+}
+
+### Get file share info
+GET {{baseUrl}}/files/{{fileId}}/share
+Authorization: Bearer {{accessToken}}
+
+### Delete file
+DELETE {{baseUrl}}/files/{{fileId}}
+Authorization: Bearer {{accessToken}}
+
+### Restore file from trash
+POST {{baseUrl}}/files/{{fileId}}/restore
+Authorization: Bearer {{accessToken}}
+
+### Get file statistics
+GET {{baseUrl}}/files/stats
+Authorization: Bearer {{accessToken}}
+
+### Get file processing status
+GET {{baseUrl}}/files/{{fileId}}/processing-status
+Authorization: Bearer {{accessToken}}
+
+### Bulk delete files
+DELETE {{baseUrl}}/files/bulk-delete
+Authorization: Bearer {{accessToken}}
+Content-Type: {{contentType}}
+
+{
+  "fileIds": ["{{fileId}}", "507f1f77bcf86cd799439017"]
+}
+
+### Get storage usage
+GET {{baseUrl}}/files/storage/usage
+Authorization: Bearer {{accessToken}} 

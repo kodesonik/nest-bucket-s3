@@ -59,20 +59,9 @@ export class File {
   status: string;
 
   @ApiProperty({ description: 'File metadata and processing information' })
-  @Prop({
-    width: { type: Number },
-    height: { type: Number },
-    duration: { type: Number },
-    bitrate: { type: Number },
-    fps: { type: Number },
-    colorSpace: { type: String },
-    hasAlpha: { type: Boolean },
-    compression: { type: String },
-    pages: { type: Number },
-    thumbnailUrl: { type: String },
-    thumbnailKey: { type: String },
-    optimizedUrl: { type: String },
-    optimizedKey: { type: String },
+  @Prop({ 
+    type: Object, 
+    default: {}
   })
   metadata: {
     width?: number;
@@ -91,11 +80,14 @@ export class File {
   };
 
   @ApiProperty({ description: 'File processing options' })
-  @Prop({
-    generateThumbnail: { type: Boolean, default: false },
-    optimizeImage: { type: Boolean, default: false },
-    extractMetadata: { type: Boolean, default: true },
-    virusScan: { type: Boolean, default: false },
+  @Prop({ 
+    type: Object, 
+    default: {
+      generateThumbnail: false,
+      optimizeImage: false,
+      extractMetadata: true,
+      virusScan: false
+    }
   })
   processing: {
     generateThumbnail: boolean;
@@ -105,13 +97,12 @@ export class File {
   };
 
   @ApiProperty({ description: 'File access and security settings' })
-  @Prop({
-    isPublic: { type: Boolean, default: false },
-    accessToken: { type: String },
-    expiresAt: { type: Date },
-    password: { type: String },
-    downloadCount: { type: Number, default: 0 },
-    maxDownloads: { type: Number },
+  @Prop({ 
+    type: Object, 
+    default: {
+      isPublic: false,
+      downloadCount: 0
+    }
   })
   access: {
     isPublic: boolean;

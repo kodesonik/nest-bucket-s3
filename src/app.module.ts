@@ -48,7 +48,6 @@ import appConfig from './config/app.config';
         serverSelectionTimeoutMS: 5000,
         socketTimeoutMS: 45000,
         bufferCommands: false,
-        bufferMaxEntries: 0,
       }),
       inject: [ConfigService],
     }),

@@ -18,8 +18,8 @@ COPY src/ ./src/
 COPY views/ ./views/
 COPY public/ ./public/
 
-# Build the simplified application (temporarily to test infrastructure)
-# RUN npx tsc src/main-simple.ts src/app-simple.module.ts src/health.controller.ts --outDir dist --target es2020 --module commonjs --esModuleInterop --allowSyntheticDefaultImports --experimentalDecorators --emitDecoratorMetadata --moduleResolution node
+# Build the NestJS application
+RUN npm run build
 
 # Production stage
 FROM node:18-alpine AS production

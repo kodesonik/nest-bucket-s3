@@ -12,7 +12,7 @@ services:
     environment:
       - NODE_ENV=${NODE_ENV:-production}
       - PORT=3000
-      - MONGODB_URI=mongodb://mongodb:27017/${MONGODB_DATABASE:-digital-bucket}
+      - MONGODB_URI=mongodb://${MONGODB_ROOT_USERNAME:-admin}:${MONGODB_ROOT_PASSWORD:-password}@mongodb:27017/${MONGODB_DATABASE:-digital-bucket}?authSource=admin
       - JWT_SECRET=${JWT_SECRET}
       - DO_SPACES_ENDPOINT=${DO_SPACES_ENDPOINT}
       - DO_SPACES_BUCKET=${DO_SPACES_BUCKET}

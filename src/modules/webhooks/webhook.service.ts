@@ -4,7 +4,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { HttpService } from '@nestjs/axios';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import * as crypto from 'crypto';
+import { randomUUID, randomBytes, createHmac } from 'crypto';
 import { firstValueFrom } from 'rxjs';
 import { Webhook, WebhookDocument, WebhookStatus } from '../../schemas/webhook.schema';
 import { WebhookEvent, WebhookEventDocument, WebhookEventStatus } from '../../schemas/webhook-event.schema';
@@ -102,7 +102,7 @@ export class WebhookService {
     this.logger.log(`Webhook deleted: ${id}`);
   }
 
-  async getWebhooks(appId: string): Promise<WebhookDocument[]> {
+  async getWebhooks(appId: string, filters: any): Promise<WebhookDocument[]> {
     return this.webhookModel.find({ appId: new Types.ObjectId(appId) }).exec();
   }
 
@@ -137,7 +137,7 @@ export class WebhookService {
     }
 
     const basePayload: WebhookPayload = {
-      id: crypto.randomUUID(),
+      id: randomUUID(),
       event: eventType,
       timestamp: new Date(),
       data,
@@ -210,12 +210,12 @@ export class WebhookService {
     this.logger.log(`Processing ${failedEvents.length} failed webhook events`);
 
     for (const event of failedEvents) {
-      if (!event.webhookId || event.webhookId.status !== 'active') {
+      if (!event.webhookId) {
         continue;
       }
 
       try {
-        await this.processWebhookEvent(event.webhookId as WebhookDocument, event.payload);
+        await this.processWebhookEvent(event.webhookId as any, event.payload);
       } catch (error) {
         this.logger.error(`Retry failed for webhook event ${event._id}: ${(error as Error).message}`);
       }
@@ -284,7 +284,7 @@ export class WebhookService {
   async getWebhookStatistics(
     webhookId: string,
     appId: string,
-    period: string = '30d',
+    period: any = '30d',
   ): Promise<any> {
     const webhook = await this.getWebhook(webhookId, appId);
     const periodStart = this.getPeriodStart(period);
@@ -360,11 +360,11 @@ export class WebhookService {
     };
   }
 
-  async testWebhook(id: string, appId: string): Promise<any> {
+  async testWebhook(id: string, appId: string, payload: any): Promise<any> {
     const webhook = await this.getWebhook(id, appId);
     
     const testPayload: WebhookPayload = {
-      id: crypto.randomUUID(),
+      id: randomUUID(),
       event: 'webhook.test',
       timestamp: new Date(),
       data: {
@@ -506,7 +506,7 @@ export class WebhookService {
     // Process the event
     try {
       const typedPayload: WebhookPayload = {
-        id: event.payload.id || crypto.randomUUID(),
+        id: event.payload.id || randomUUID(),
         event: event.eventType,
         timestamp: event.payload.timestamp || new Date(),
         data: event.payload.data,
@@ -526,13 +526,12 @@ export class WebhookService {
 
   // Private helper methods
   private generateSecret(): string {
-    return crypto.randomBytes(32).toString('hex');
+    return randomBytes(32).toString('hex');
   }
 
   private generateSignature(payload: WebhookPayload, secret: string): string {
     const payloadString = JSON.stringify(payload);
-    return crypto
-      .createHmac('sha256', secret)
+    return createHmac('sha256', secret)
       .update(payloadString)
       .digest('hex');
   }

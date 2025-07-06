@@ -80,21 +80,23 @@ export class WebhookController {
   @ApiResponse({ status: 400, description: 'Bad request' })
   async createWebhook(@Request() req: any, @Body(ValidationPipe) createWebhookDto: CreateWebhookDto) {
     try {
-      const webhook = await this.webhookService.createWebhook(req.user.userId, createWebhookDto);
+      const webhook: any = await this.webhookService.createWebhook(req.user.userId, createWebhookDto);
       return {
         success: true,
         message: 'Webhook created successfully',
         data: {
           id: webhook._id,
-          appId: webhook.appId,
+          name: webhook.name,
           url: webhook.url,
           events: webhook.events,
-          isActive: webhook.isActive,
-          settings: webhook.settings,
+          status: webhook.status,
+          retryConfig: webhook.retryConfig,
+          statistics: webhook.statistics,
           createdAt: webhook.createdAt,
+          updatedAt: webhook.updatedAt,
         },
       };
-    } catch (error) {
+    } catch (error: any) {
       throw new BadRequestException(error.message);
     }
   }
@@ -110,16 +112,17 @@ export class WebhookController {
     @Query('status') status?: string,
   ) {
     const filters = { appId, status: status === 'active' ? true : status === 'inactive' ? false : undefined };
-    const webhooks = await this.webhookService.getWebhooks(req.user.userId, filters);
+    const webhooks: any = await this.webhookService.getWebhooks(req.user.userId, filters);
     
     return {
       success: true,
       data: webhooks.map(webhook => ({
         id: webhook._id,
-        appId: webhook.appId,
+        name: webhook.name,
         url: webhook.url,
         events: webhook.events,
-        isActive: webhook.isActive,
+        status: webhook.status,
+        retryConfig: webhook.retryConfig,
         statistics: webhook.statistics,
         createdAt: webhook.createdAt,
         updatedAt: webhook.updatedAt,
@@ -132,16 +135,16 @@ export class WebhookController {
   @ApiResponse({ status: 200, description: 'Webhook retrieved successfully' })
   @ApiResponse({ status: 404, description: 'Webhook not found' })
   async getWebhook(@Request() req: any, @Param('webhookId') webhookId: string) {
-    const webhook = await this.webhookService.getWebhook(webhookId, req.user.userId);
+    const webhook: any = await this.webhookService.getWebhook(webhookId, req.user.userId);
     return {
       success: true,
       data: {
         id: webhook._id,
-        appId: webhook.appId,
+        name: webhook.name,
         url: webhook.url,
         events: webhook.events,
-        isActive: webhook.isActive,
-        settings: webhook.settings,
+        status: webhook.status,
+        retryConfig: webhook.retryConfig,
         statistics: webhook.statistics,
         createdAt: webhook.createdAt,
         updatedAt: webhook.updatedAt,
@@ -158,16 +161,17 @@ export class WebhookController {
     @Param('webhookId') webhookId: string,
     @Body(ValidationPipe) updateWebhookDto: UpdateWebhookDto,
   ) {
-    const webhook = await this.webhookService.updateWebhook(webhookId, req.user.userId, updateWebhookDto);
+    const webhook: any = await this.webhookService.updateWebhook(webhookId, req.user.userId, updateWebhookDto);
     return {
       success: true,
       message: 'Webhook updated successfully',
       data: {
         id: webhook._id,
+        name: webhook.name,
         url: webhook.url,
         events: webhook.events,
-        isActive: webhook.isActive,
-        settings: webhook.settings,
+        status: webhook.status,
+        retryConfig: webhook.retryConfig,
         updatedAt: webhook.updatedAt,
       },
     };
@@ -252,7 +256,7 @@ export class WebhookController {
     @Query('days') days?: string,
   ) {
     const daysPeriod = days ? parseInt(days) : 7;
-    const stats = await this.webhookService.getWebhookStats(webhookId, req.user.userId, daysPeriod);
+    const stats = await this.webhookService.getWebhookStatistics(webhookId, req.user.userId, daysPeriod);
     return {
       success: true,
       data: stats,
@@ -263,13 +267,14 @@ export class WebhookController {
   @ApiOperation({ summary: 'Toggle webhook active status' })
   @ApiResponse({ status: 200, description: 'Webhook status toggled' })
   async toggleWebhook(@Request() req: any, @Param('webhookId') webhookId: string) {
-    const webhook = await this.webhookService.toggleWebhook(webhookId, req.user.userId);
+    const webhook: any = await this.webhookService.toggleWebhook(webhookId, req.user.userId);
     return {
       success: true,
-      message: `Webhook ${webhook.isActive ? 'activated' : 'deactivated'}`,
+      message: `Webhook ${webhook.status === 'active' ? 'activated' : 'deactivated'}`,
       data: {
         id: webhook._id,
-        isActive: webhook.isActive,
+        status: webhook.status,
+        updatedAt: webhook.updatedAt,
       },
     };
   }

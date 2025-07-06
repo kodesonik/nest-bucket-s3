@@ -1,0 +1,209 @@
+### Load environment variables
+# @name loadEnv
+< ./environment.rest
+
+### File Processing Module Tests
+
+### Process file
+POST {{baseUrl}}/file-processing/process
+Authorization: Bearer {{accessToken}}
+Content-Type: {{contentType}}
+
+{
+  "fileId": "{{fileId}}",
+  "operations": [
+    {
+      "type": "resize",
+      "width": 800,
+      "height": 600
+    },
+    {
+      "type": "compress",
+      "quality": 85
+    }
+  ]
+}
+
+### Process file with advanced options
+POST {{baseUrl}}/file-processing/process
+Authorization: Bearer {{accessToken}}
+Content-Type: {{contentType}}
+
+{
+  "fileId": "{{fileId}}",
+  "preserveOriginal": true,
+  "folder": "processed",
+  "analyzeContent": true,
+  "compressVideo": true,
+  "performOCR": true,
+  "analyzeArchive": false,
+  "extractArchive": false,
+  "maxWidth": 1920,
+  "maxHeight": 1080,
+  "quality": 90,
+  "thumbnailWidth": 300,
+  "thumbnailHeight": 200,
+  "extractText": true
+}
+
+### Get processing status
+GET {{baseUrl}}/file-processing/status/{{fileId}}
+Authorization: Bearer {{accessToken}}
+
+### Get processing job by ID
+GET {{baseUrl}}/file-processing/jobs/{{jobId}}
+Authorization: Bearer {{accessToken}}
+
+### Get all processing jobs
+GET {{baseUrl}}/file-processing/jobs
+Authorization: Bearer {{accessToken}}
+
+### Get processing jobs with filters
+GET {{baseUrl}}/file-processing/jobs?status=completed&page=1&limit=10
+Authorization: Bearer {{accessToken}}
+
+### Cancel processing job
+POST {{baseUrl}}/file-processing/jobs/{{jobId}}/cancel
+Authorization: Bearer {{accessToken}}
+
+### Retry processing job
+POST {{baseUrl}}/file-processing/jobs/{{jobId}}/retry
+Authorization: Bearer {{accessToken}}
+
+### Generate thumbnail
+POST {{baseUrl}}/file-processing/thumbnail
+Authorization: Bearer {{accessToken}}
+Content-Type: {{contentType}}
+
+{
+  "fileId": "{{fileId}}",
+  "width": 300,
+  "height": 200,
+  "format": "jpg",
+  "quality": 85
+}
+
+### Extract text from file
+POST {{baseUrl}}/file-processing/extract-text
+Authorization: Bearer {{accessToken}}
+Content-Type: {{contentType}}
+
+{
+  "fileId": "{{fileId}}",
+  "language": "eng"
+}
+
+### Analyze file content
+POST {{baseUrl}}/file-processing/analyze
+Authorization: Bearer {{accessToken}}
+Content-Type: {{contentType}}
+
+{
+  "fileId": "{{fileId}}",
+  "includeMetadata": true,
+  "detectFaces": true,
+  "detectObjects": true,
+  "extractColors": true
+}
+
+### Convert file format
+POST {{baseUrl}}/file-processing/convert
+Authorization: Bearer {{accessToken}}
+Content-Type: {{contentType}}
+
+{
+  "fileId": "{{fileId}}",
+  "targetFormat": "pdf",
+  "quality": 95,
+  "preserveOriginal": true
+}
+
+### Compress file
+POST {{baseUrl}}/file-processing/compress
+Authorization: Bearer {{accessToken}}
+Content-Type: {{contentType}}
+
+{
+  "fileId": "{{fileId}}",
+  "compressionLevel": 6,
+  "format": "zip"
+}
+
+### Extract archive
+POST {{baseUrl}}/file-processing/extract
+Authorization: Bearer {{accessToken}}
+Content-Type: {{contentType}}
+
+{
+  "fileId": "{{fileId}}",
+  "password": "archive-password",
+  "extractToFolder": "extracted"
+}
+
+### Watermark file
+POST {{baseUrl}}/file-processing/watermark
+Authorization: Bearer {{accessToken}}
+Content-Type: {{contentType}}
+
+{
+  "fileId": "{{fileId}}",
+  "watermarkText": "© 2024 My Company",
+  "position": "bottom-right",
+  "opacity": 0.5,
+  "fontSize": 24
+}
+
+### Rotate file
+POST {{baseUrl}}/file-processing/rotate
+Authorization: Bearer {{accessToken}}
+Content-Type: {{contentType}}
+
+{
+  "fileId": "{{fileId}}",
+  "angle": 90
+}
+
+### Get processing statistics
+GET {{baseUrl}}/file-processing/stats
+Authorization: Bearer {{accessToken}}
+
+### Get processing queue status
+GET {{baseUrl}}/file-processing/queue/status
+Authorization: Bearer {{accessToken}}
+
+### Get processing queue (Admin)
+GET {{baseUrl}}/file-processing/queue
+Authorization: Bearer {{adminToken}}
+
+### Clear processing queue (Admin)
+POST {{baseUrl}}/file-processing/queue/clear
+Authorization: Bearer {{adminToken}}
+
+### Get processing capabilities
+GET {{baseUrl}}/file-processing/capabilities
+Authorization: Bearer {{accessToken}}
+
+### Batch process files
+POST {{baseUrl}}/file-processing/batch
+Authorization: Bearer {{accessToken}}
+Content-Type: {{contentType}}
+
+{
+  "fileIds": ["{{fileId}}", "507f1f77bcf86cd799439021"],
+  "operations": [
+    {
+      "type": "resize",
+      "width": 800,
+      "height": 600
+    }
+  ],
+  "preserveOriginal": true
+}
+
+### Get batch processing status
+GET {{baseUrl}}/file-processing/batch/{{batchId}}
+Authorization: Bearer {{accessToken}}
+
+### Cancel batch processing
+POST {{baseUrl}}/file-processing/batch/{{batchId}}/cancel
+Authorization: Bearer {{accessToken}} 

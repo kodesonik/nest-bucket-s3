@@ -1,0 +1,147 @@
+### Load environment variables
+# @name loadEnv
+< ./environment.rest
+
+### Apps Module Tests
+
+### Register new app
+POST {{baseUrl}}/apps
+Authorization: Bearer {{accessToken}}
+Content-Type: {{contentType}}
+
+{
+  "name": "My Test App",
+  "description": "A test application for API integration",
+  "website": "https://example.com",
+  "redirectUri": "https://example.com/callback",
+  "permissions": ["read", "write"]
+}
+
+### Get all apps
+GET {{baseUrl}}/apps
+Authorization: Bearer {{accessToken}}
+
+### Get app by ID
+GET {{baseUrl}}/apps/{{appId}}
+Authorization: Bearer {{accessToken}}
+
+### Update app
+PUT {{baseUrl}}/apps/{{appId}}
+Authorization: Bearer {{accessToken}}
+Content-Type: {{contentType}}
+
+{
+  "name": "Updated App Name",
+  "description": "Updated app description",
+  "website": "https://updated-example.com",
+  "redirectUri": "https://updated-example.com/callback",
+  "permissions": ["read", "write", "delete"]
+}
+
+### Generate API key
+POST {{baseUrl}}/apps/{{appId}}/api-keys
+Authorization: Bearer {{accessToken}}
+Content-Type: {{contentType}}
+
+{
+  "name": "Production API Key",
+  "permissions": ["read", "write"],
+  "expiresAt": "2025-12-31T23:59:59Z"
+}
+
+### Get API keys for app
+GET {{baseUrl}}/apps/{{appId}}/api-keys
+Authorization: Bearer {{accessToken}}
+
+### Update API key
+PUT {{baseUrl}}/apps/{{appId}}/api-keys/{{apiKey}}
+Authorization: Bearer {{accessToken}}
+Content-Type: {{contentType}}
+
+{
+  "name": "Updated API Key",
+  "permissions": ["read"],
+  "isActive": true
+}
+
+### Revoke API key
+DELETE {{baseUrl}}/apps/{{appId}}/api-keys/{{apiKey}}
+Authorization: Bearer {{accessToken}}
+
+### Regenerate API key
+POST {{baseUrl}}/apps/{{appId}}/api-keys/{{apiKey}}/regenerate
+Authorization: Bearer {{accessToken}}
+
+### Get app statistics
+GET {{baseUrl}}/apps/{{appId}}/stats
+Authorization: Bearer {{accessToken}}
+
+### Get app usage analytics
+GET {{baseUrl}}/apps/{{appId}}/analytics
+Authorization: Bearer {{accessToken}}
+
+### Get app usage analytics with date range
+GET {{baseUrl}}/apps/{{appId}}/analytics?startDate=2024-01-01&endDate=2024-12-31
+Authorization: Bearer {{accessToken}}
+
+### Get app logs
+GET {{baseUrl}}/apps/{{appId}}/logs
+Authorization: Bearer {{accessToken}}
+
+### Get app logs with filters
+GET {{baseUrl}}/apps/{{appId}}/logs?level=error&startDate=2024-01-01&limit=100
+Authorization: Bearer {{accessToken}}
+
+### Test API key
+POST {{baseUrl}}/apps/test-api-key
+Authorization: Bearer {{accessToken}}
+Content-Type: {{contentType}}
+
+{
+  "apiKey": "{{apiKey}}"
+}
+
+### Get app permissions
+GET {{baseUrl}}/apps/{{appId}}/permissions
+Authorization: Bearer {{accessToken}}
+
+### Update app permissions
+PUT {{baseUrl}}/apps/{{appId}}/permissions
+Authorization: Bearer {{accessToken}}
+Content-Type: {{contentType}}
+
+{
+  "permissions": ["read", "write", "delete", "admin"]
+}
+
+### Delete app
+DELETE {{baseUrl}}/apps/{{appId}}
+Authorization: Bearer {{accessToken}}
+
+### Get app rate limits
+GET {{baseUrl}}/apps/{{appId}}/rate-limits
+Authorization: Bearer {{accessToken}}
+
+### Update app rate limits
+PUT {{baseUrl}}/apps/{{appId}}/rate-limits
+Authorization: Bearer {{accessToken}}
+Content-Type: {{contentType}}
+
+{
+  "requestsPerMinute": 100,
+  "requestsPerHour": 1000,
+  "requestsPerDay": 10000
+}
+
+### Get app webhooks
+GET {{baseUrl}}/apps/{{appId}}/webhooks
+Authorization: Bearer {{accessToken}}
+
+### Test app connection
+POST {{baseUrl}}/apps/{{appId}}/test-connection
+Authorization: Bearer {{accessToken}}
+Content-Type: {{contentType}}
+
+{
+  "endpoint": "https://example.com/test"
+} 

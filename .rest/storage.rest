@@ -1,0 +1,147 @@
+### Load environment variables
+# @name loadEnv
+< ./environment.rest
+
+### Storage Module Tests
+
+### Get storage statistics
+GET {{baseUrl}}/storage/stats
+Authorization: Bearer {{accessToken}}
+
+### Get storage usage by user
+GET {{baseUrl}}/storage/usage
+Authorization: Bearer {{accessToken}}
+
+### Get storage usage by type
+GET {{baseUrl}}/storage/usage/by-type
+Authorization: Bearer {{accessToken}}
+
+### Get storage quota
+GET {{baseUrl}}/storage/quota
+Authorization: Bearer {{accessToken}}
+
+### Update storage quota (Admin)
+PUT {{baseUrl}}/storage/quota
+Authorization: Bearer {{adminToken}}
+Content-Type: {{contentType}}
+
+{
+  "quota": 1073741824,
+  "userId": "{{userId}}"
+}
+
+### Get storage buckets
+GET {{baseUrl}}/storage/buckets
+Authorization: Bearer {{accessToken}}
+
+### Create storage bucket
+POST {{baseUrl}}/storage/buckets
+Authorization: Bearer {{accessToken}}
+Content-Type: {{contentType}}
+
+{
+  "name": "my-bucket",
+  "description": "My file storage bucket",
+  "isPublic": false,
+  "maxSize": 104857600
+}
+
+### Get bucket by ID
+GET {{baseUrl}}/storage/buckets/{{bucketId}}
+Authorization: Bearer {{accessToken}}
+
+### Update bucket
+PUT {{baseUrl}}/storage/buckets/{{bucketId}}
+Authorization: Bearer {{accessToken}}
+Content-Type: {{contentType}}
+
+{
+  "name": "updated-bucket",
+  "description": "Updated bucket description",
+  "isPublic": true,
+  "maxSize": 209715200
+}
+
+### Delete bucket
+DELETE {{baseUrl}}/storage/buckets/{{bucketId}}
+Authorization: Bearer {{accessToken}}
+
+### Get bucket files
+GET {{baseUrl}}/storage/buckets/{{bucketId}}/files
+Authorization: Bearer {{accessToken}}
+
+### Move file to bucket
+POST {{baseUrl}}/storage/buckets/{{bucketId}}/files
+Authorization: Bearer {{accessToken}}
+Content-Type: {{contentType}}
+
+{
+  "fileId": "{{fileId}}"
+}
+
+### Get storage locations
+GET {{baseUrl}}/storage/locations
+Authorization: Bearer {{accessToken}}
+
+### Get storage providers
+GET {{baseUrl}}/storage/providers
+Authorization: Bearer {{adminToken}}
+
+### Add storage provider (Admin)
+POST {{baseUrl}}/storage/providers
+Authorization: Bearer {{adminToken}}
+Content-Type: {{contentType}}
+
+{
+  "name": "AWS S3",
+  "type": "s3",
+  "config": {
+    "region": "us-east-1",
+    "bucket": "my-s3-bucket",
+    "accessKeyId": "ACCESS_KEY",
+    "secretAccessKey": "SECRET_KEY"
+  },
+  "isActive": true
+}
+
+### Update storage provider (Admin)
+PUT {{baseUrl}}/storage/providers/{{providerId}}
+Authorization: Bearer {{adminToken}}
+Content-Type: {{contentType}}
+
+{
+  "name": "Updated Provider",
+  "config": {
+    "region": "us-west-2",
+    "bucket": "updated-bucket"
+  },
+  "isActive": false
+}
+
+### Delete storage provider (Admin)
+DELETE {{baseUrl}}/storage/providers/{{providerId}}
+Authorization: Bearer {{adminToken}}
+
+### Test storage provider (Admin)
+POST {{baseUrl}}/storage/providers/{{providerId}}/test
+Authorization: Bearer {{adminToken}}
+
+### Clean up orphaned files (Admin)
+POST {{baseUrl}}/storage/cleanup
+Authorization: Bearer {{adminToken}}
+
+### Get storage health
+GET {{baseUrl}}/storage/health
+Authorization: Bearer {{accessToken}}
+
+### Optimize storage (Admin)
+POST {{baseUrl}}/storage/optimize
+Authorization: Bearer {{adminToken}}
+
+### Get storage analytics (Admin)
+GET {{baseUrl}}/storage/analytics
+Authorization: Bearer {{adminToken}}
+
+### Get storage analytics with date range (Admin)
+GET {{baseUrl}}/storage/analytics?startDate=2024-01-01&endDate=2024-12-31
+Authorization: Bearer {{adminToken}} 

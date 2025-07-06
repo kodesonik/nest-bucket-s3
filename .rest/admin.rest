@@ -1,0 +1,177 @@
+### Load environment variables
+# @name loadEnv
+< ./environment.rest
+
+### Admin Module Tests
+
+### Get system statistics
+GET {{baseUrl}}/admin/stats
+Authorization: Bearer {{adminToken}}
+
+### Get system health
+GET {{baseUrl}}/admin/health
+Authorization: Bearer {{adminToken}}
+
+### Get all users (Admin view)
+GET {{baseUrl}}/admin/users
+Authorization: Bearer {{adminToken}}
+
+### Get user analytics
+GET {{baseUrl}}/admin/users/analytics
+Authorization: Bearer {{adminToken}}
+
+### Get user by ID (Admin view)
+GET {{baseUrl}}/admin/users/{{userId}}
+Authorization: Bearer {{adminToken}}
+
+### Update user (Admin)
+PUT {{baseUrl}}/admin/users/{{userId}}
+Authorization: Bearer {{adminToken}}
+Content-Type: {{contentType}}
+
+{
+  "name": "Admin Updated Name",
+  "email": "admin-updated@example.com",
+  "role": "admin",
+  "isActive": true,
+  "permissions": ["read", "write", "delete"]
+}
+
+### Delete user (Admin)
+DELETE {{baseUrl}}/admin/users/{{userId}}
+Authorization: Bearer {{adminToken}}
+
+### Get file statistics
+GET {{baseUrl}}/admin/files/stats
+Authorization: Bearer {{adminToken}}
+
+### Get file analytics
+GET {{baseUrl}}/admin/files/analytics
+Authorization: Bearer {{adminToken}}
+
+### Get all files (Admin view)
+GET {{baseUrl}}/admin/files
+Authorization: Bearer {{adminToken}}
+
+### Delete file (Admin)
+DELETE {{baseUrl}}/admin/files/{{fileId}}
+Authorization: Bearer {{adminToken}}
+
+### Get webhook statistics
+GET {{baseUrl}}/admin/webhooks/stats
+Authorization: Bearer {{adminToken}}
+
+### Get webhook analytics
+GET {{baseUrl}}/admin/webhooks/analytics
+Authorization: Bearer {{adminToken}}
+
+### Get all webhooks (Admin view)
+GET {{baseUrl}}/admin/webhooks
+Authorization: Bearer {{adminToken}}
+
+### Get system logs
+GET {{baseUrl}}/admin/logs
+Authorization: Bearer {{adminToken}}
+
+### Get system logs with filters
+GET {{baseUrl}}/admin/logs?level=error&startDate=2024-01-01&endDate=2024-12-31
+Authorization: Bearer {{adminToken}}
+
+### Clear system logs
+DELETE {{baseUrl}}/admin/logs
+Authorization: Bearer {{adminToken}}
+
+### Get audit logs
+GET {{baseUrl}}/admin/audit-logs
+Authorization: Bearer {{adminToken}}
+
+### Get audit logs with filters
+GET {{baseUrl}}/admin/audit-logs?action=delete&userId={{userId}}&startDate=2024-01-01
+Authorization: Bearer {{adminToken}}
+
+### Get system configuration
+GET {{baseUrl}}/admin/config
+Authorization: Bearer {{adminToken}}
+
+### Update system configuration
+PUT {{baseUrl}}/admin/config
+Authorization: Bearer {{adminToken}}
+Content-Type: {{contentType}}
+
+{
+  "maxFileSize": 104857600,
+  "allowedFileTypes": ["pdf", "txt", "jpg", "png"],
+  "enableWebhooks": true,
+  "maxWebhooksPerUser": 10,
+  "rateLimitRequests": 1000,
+  "rateLimitWindow": 3600
+}
+
+### Get database statistics
+GET {{baseUrl}}/admin/database/stats
+Authorization: Bearer {{adminToken}}
+
+### Backup database
+POST {{baseUrl}}/admin/database/backup
+Authorization: Bearer {{adminToken}}
+
+### Get backup history
+GET {{baseUrl}}/admin/database/backups
+Authorization: Bearer {{adminToken}}
+
+### Restore database
+POST {{baseUrl}}/admin/database/restore
+Authorization: Bearer {{adminToken}}
+Content-Type: {{contentType}}
+
+{
+  "backupId": "backup-id-here"
+}
+
+### Clear cache
+POST {{baseUrl}}/admin/cache/clear
+Authorization: Bearer {{adminToken}}
+
+### Get cache statistics
+GET {{baseUrl}}/admin/cache/stats
+Authorization: Bearer {{adminToken}}
+
+### Send system notification
+POST {{baseUrl}}/admin/notifications
+Authorization: Bearer {{adminToken}}
+Content-Type: {{contentType}}
+
+{
+  "title": "System Maintenance",
+  "message": "System will be under maintenance from 2 AM to 4 AM EST",
+  "type": "warning",
+  "recipients": ["all"]
+}
+
+### Get system notifications
+GET {{baseUrl}}/admin/notifications
+Authorization: Bearer {{adminToken}}
+
+### Bulk operations - Delete users
+POST {{baseUrl}}/admin/bulk/delete-users
+Authorization: Bearer {{adminToken}}
+Content-Type: {{contentType}}
+
+{
+  "userIds": ["507f1f77bcf86cd799439019", "507f1f77bcf86cd799439020"],
+  "permanent": false
+}
+
+### Export data
+POST {{baseUrl}}/admin/export
+Authorization: Bearer {{adminToken}}
+Content-Type: {{contentType}}
+
+{
+  "dataType": "users",
+  "format": "json",
+  "dateRange": {
+    "startDate": "2024-01-01",
+    "endDate": "2024-12-31"
+  }
+} 

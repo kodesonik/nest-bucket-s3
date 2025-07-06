@@ -1,0 +1,86 @@
+### Load environment variables
+# @name loadEnv
+< ./environment.rest
+
+### Users Module Tests
+
+### Get all users (Admin only)
+GET {{baseUrl}}/users
+Authorization: Bearer {{adminToken}}
+
+### Get users with pagination
+GET {{baseUrl}}/users?page=1&limit=10&sort=createdAt&order=desc
+Authorization: Bearer {{adminToken}}
+
+### Search users
+GET {{baseUrl}}/users?search=john
+Authorization: Bearer {{adminToken}}
+
+### Get user by ID
+GET {{baseUrl}}/users/{{userId}}
+Authorization: Bearer {{accessToken}}
+
+### Create new user (Admin only)
+POST {{baseUrl}}/users
+Authorization: Bearer {{adminToken}}
+Content-Type: {{contentType}}
+
+{
+  "email": "newuser@example.com",
+  "password": "password123",
+  "name": "New User",
+  "role": "user",
+  "isActive": true
+}
+
+### Update user
+PUT {{baseUrl}}/users/{{userId}}
+Authorization: Bearer {{accessToken}}
+Content-Type: {{contentType}}
+
+{
+  "name": "Updated User Name",
+  "email": "updated@example.com",
+  "isActive": true
+}
+
+### Update user role (Admin only)
+PATCH {{baseUrl}}/users/{{userId}}/role
+Authorization: Bearer {{adminToken}}
+Content-Type: {{contentType}}
+
+{
+  "role": "admin"
+}
+
+### Deactivate user (Admin only)
+PATCH {{baseUrl}}/users/{{userId}}/deactivate
+Authorization: Bearer {{adminToken}}
+
+### Activate user (Admin only)
+PATCH {{baseUrl}}/users/{{userId}}/activate
+Authorization: Bearer {{adminToken}}
+
+### Delete user (Admin only)
+DELETE {{baseUrl}}/users/{{userId}}
+Authorization: Bearer {{adminToken}}
+
+### Get user statistics (Admin only)
+GET {{baseUrl}}/users/stats
+Authorization: Bearer {{adminToken}}
+
+### Get user activity log
+GET {{baseUrl}}/users/{{userId}}/activity
+Authorization: Bearer {{accessToken}}
+
+### Bulk update users (Admin only)
+PATCH {{baseUrl}}/users/bulk-update
+Authorization: Bearer {{adminToken}}
+Content-Type: {{contentType}}
+
+{
+  "userIds": ["{{userId}}", "507f1f77bcf86cd799439016"],
+  "updates": {
+    "isActive": false
+  }
+} 

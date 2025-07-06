@@ -5,7 +5,7 @@ import { App, AppDocument } from '../../schemas/app.schema';
 import { User, UserDocument } from '../../schemas/user.schema';
 import { File, FileDocument } from '../../schemas/file.schema';
 import { v4 as uuidv4 } from 'uuid';
-import * as crypto from 'crypto';
+import { randomBytes } from 'crypto';
 
 export interface CreateAppDto {
   name: string;
@@ -372,8 +372,8 @@ export class AppsService {
 
   private generateApiKey(): string {
     const prefix = 'db_';
-    const randomBytes = crypto.randomBytes(32).toString('hex');
-    return prefix + randomBytes;
+    const randomData = randomBytes(32).toString('hex');
+    return prefix + randomData;
   }
 
   private getMaxAppsForUser(user: UserDocument): number {
@@ -386,5 +386,33 @@ export class AppsService {
       default:
         return 3; // free plan
     }
+  }
+
+  async suspendApp(id: string, reason: string, adminId: string): Promise<AppDocument> {
+    const app = await this.appModel.findByIdAndUpdate(
+      id,
+      { status: 'suspended', suspensionReason: reason },
+      { new: true }
+    ).exec();
+    return app;
+  }
+
+  async activateApp(id: string, adminId: string): Promise<AppDocument> {
+    const app = await this.appModel.findByIdAndUpdate(
+      id,
+      { status: 'active' },
+      { new: true }
+    ).exec();
+    return app;
+  }
+
+  async getAppUsage(id: string, period: string): Promise<any> {
+    // Placeholder implementation
+    return {
+      totalFiles: 0,
+      totalSize: 0,
+      apiCalls: 0,
+      bandwidth: 0,
+    };
   }
 } 

@@ -154,14 +154,14 @@ export class AppsController {
     return {
       success: true,
       message: 'API key created successfully',
-              data: {
-          id: result.keyId,
-          name: result.keyName,
-          keyHash: result.keyHash.substring(0, 8) + '...',
-          permissions: result.permissions,
-          isActive: result.isActive,
-          createdAt: result.createdAt,
-        },
+      data: {
+        id: result.keyId,
+        name: result.keyName,
+        keyHash: result.keyHash.substring(0, 8) + '...',
+        permissions: result.permissions,
+        isActive: result.isActive,
+        createdAt: result.createdAt,
+      },
     };
   }
 
@@ -228,12 +228,12 @@ export class AppsController {
       success: true,
       message: 'API key regenerated successfully',
       data: {
-        id: result.keyId,
-        name: result.keyName,
-        keyHash: result.keyHash.substring(0, 8) + '...',
-        permissions: result.permissions,
-        isActive: result.isActive,
-        createdAt: result.createdAt,
+        id: result.apiKey.keyId,
+        name: result.apiKey.keyName,
+        keyHash: result.apiKey.keyHash.substring(0, 8) + '...',
+        permissions: result.apiKey.permissions,
+        isActive: result.apiKey.isActive,
+        createdAt: result.apiKey.createdAt,
       },
     };
   }

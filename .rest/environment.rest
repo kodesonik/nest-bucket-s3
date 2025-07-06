@@ -1,0 +1,17 @@
+### Environment Variables
+@baseUrl = http://localhost:3000
+@apiVersion = v1
+@contentType = application/json
+
+### Authentication tokens (replace with actual tokens)
+@accessToken = your-access-token-here
+@refreshToken = your-refresh-token-here
+@adminToken = your-admin-token-here
+@apiKey = your-api-key-here
+
+### Sample IDs (replace with actual IDs from your database)
+@userId = 507f1f77bcf86cd799439011
+@fileId = 507f1f77bcf86cd799439012
+@webhookId = 507f1f77bcf86cd799439013
+@appId = 507f1f77bcf86cd799439014
+@eventId = 507f1f77bcf86cd799439015 
