@@ -1,0 +1,41 @@
+FROM node:18-alpine
+
+# Install dumb-init for proper signal handling
+RUN apk add --no-cache dumb-init
+
+# Create app user
+RUN addgroup -g 1001 -S nodejs
+RUN adduser -S nestjs -u 1001
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+COPY tsconfig*.json ./
+COPY nest-cli.json ./
+
+# Install all dependencies (including dev dependencies for development)
+RUN npm ci --legacy-peer-deps && npm cache clean --force
+
+# Copy static assets that don't change frequently
+COPY views/ ./views/
+COPY public/ ./public/
+
+# Create uploads directory
+RUN mkdir -p uploads && chown nestjs:nodejs uploads
+RUN mkdir -p logs && chown nestjs:nodejs logs
+
+# Switch to non-root user
+USER nestjs
+
+# Expose port
+EXPOSE 3000
+
+# Expose debug port (optional)
+EXPOSE 9229
+
+# Use dumb-init to handle signals properly
+ENTRYPOINT ["dumb-init", "--"]
+
+# Start the application in development mode with nodemon
+CMD ["npm", "run", "start:dev"] 
